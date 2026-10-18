@@ -194,11 +194,20 @@ function renderDetail(entry) {
   $('detail-clarity').textContent = hasClarityScore ? String(clarity.score) : '—';
   $('detail-clarity-max').textContent = `/ ${clarityMax}`;
   const clarityRing = $('detail-clarity-ring');
-  clarityRing.style.setProperty('--clarity-angle', `${hasClarityScore ? Math.max(0, Math.min(360, clarityScore / clarityMax * 360)) : 0}deg`);
-  clarityRing.setAttribute('aria-valuemax', String(clarityMax));
-  if (hasClarityScore) clarityRing.setAttribute('aria-valuenow', String(clarityScore));
-  else clarityRing.removeAttribute('aria-valuenow');
-  $('detail-verdict').textContent = clarity.verdict ? `${clarity.verdict} · ${verdictLabels[clarity.verdict] || ''}` : '评分档位未知';
+  const sectionRing = $('detail-section-ring');
+  const ringAngle = hasClarityScore ? Math.max(0, Math.min(360, clarityScore / clarityMax * 360)) : 0;
+  for (const ring of [clarityRing, sectionRing]) {
+    ring.style.setProperty('--clarity-angle', `${ringAngle}deg`);
+    ring.setAttribute('aria-valuemax', String(clarityMax));
+    if (hasClarityScore) ring.setAttribute('aria-valuenow', String(clarityScore));
+    else ring.removeAttribute('aria-valuenow');
+  }
+  $('detail-section-score').textContent = hasClarityScore ? String(clarity.score) : '—';
+  $('detail-section-max').textContent = `/ ${clarityMax}`;
+  const verdictText = clarity.verdict ? `${clarity.verdict} · ${verdictLabels[clarity.verdict] || ''}` : '评分档位未知';
+  $('detail-verdict').textContent = verdictText;
+  $('detail-section-verdict').textContent = verdictText;
+  $('detail-section-verdict').classList.toggle('failed', Boolean(clarity.verdict?.includes('reject')));
   $('detail-references').textContent = report.reference_count ?? '—';
   $('detail-stability').textContent = `盲排稳定性：${stabilityLabels[calibration.stability] || '未知'}`;
   $('detail-algorithm').textContent = analysis.algorithm || '—';
