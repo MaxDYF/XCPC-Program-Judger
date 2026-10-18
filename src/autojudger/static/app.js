@@ -52,6 +52,7 @@ function updateProgress(job) {
   const phase = job.phase;
   const index = phases.indexOf(phase);
   const descriptions = {
+    uploading: '正在上传题面 PDF 和标准程序，上传完成后会开始评测。',
     queued: '任务已创建，等待处理。',
     analyzing: '正在阅读题面和标准程序，推断算法与相关标签。',
     clarity: '正在还原去背景化的题意，并评估原题面是否容易理解。',
@@ -73,8 +74,24 @@ function updateProgress(job) {
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 async function awaitJob(jobId) {
   while (true) {
-    const response = await fetch(`/jobs/${encodeURIComponent(jobId)}`);
-    if (!response.ok) throw new Error('无法读取任务状态，请检查服务是否仍在运行。');
+    let response;
+    try {
+      response = await fetch(`/jobs/${encodeURIComponent(jobId)}`, {
+        cache: 'no-store', signal: AbortSignal.timeout(20000)
+      });
+    } catch {
+      throw new Error('读取任务状态超时。评测可能仍在后台进行，请到“任务与历史”查看。');
+    }
+    if (response.status === 404) {
+      const history = await fetch(`/api/history/${encodeURIComponent(jobId)}`, {
+        cache: 'no-store', signal: AbortSignal.timeout(20000)
+      });
+      if (history.ok) {
+        sessionStorage.removeItem(activeJobKey);
+        return (await history.json()).report;
+      }
+    }
+    if (!response.ok) throw new Error('无法读取任务状态，请到“任务与历史”查看。');
     const job = await response.json();
     if (job.status === 'completed') {
       sessionStorage.removeItem(activeJobKey);
@@ -100,17 +117,21 @@ form.addEventListener('submit', async (event) => {
   errorPanel.classList.add('hidden');
   resultPanel.classList.add('hidden');
   progressPanel.classList.remove('hidden');
-  updateProgress({ phase: 'queued', completed: 0, total: 0 });
+  updateProgress({ phase: 'uploading', completed: 0, total: 0 });
   progressPanel.scrollIntoView({ behavior: 'smooth', block: 'center' });
   try {
-    const response = await fetch('/jobs', { method: 'POST', headers: { 'X-XCPC-ProblemJudger-Request': '1' }, body: new FormData(form) });
+    const response = await fetch('/jobs', { method: 'POST', headers: { 'X-XCPC-ProblemJudger-Request': '1' },
+      body: new FormData(form), signal: AbortSignal.timeout(120000) });
     const job = await response.json();
     if (!response.ok) throw new Error(typeof job.detail === 'string' ? job.detail : '提交失败');
     sessionStorage.setItem(activeJobKey, job.job_id);
+    updateProgress({ phase: 'queued', completed: 0, total: 0 });
     const report = await awaitJob(job.job_id);
     showReport(report);
   } catch (error) {
-    showError(error.message || '评估未完成，请重试。');
+    showError(error.name === 'TimeoutError'
+      ? '上传超时。服务端可能仍在处理，请到“任务与历史”查看。'
+      : error.message || '评估未完成，请重试。');
   } finally {
     submitButton.disabled = false;
   }
