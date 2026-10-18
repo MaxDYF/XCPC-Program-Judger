@@ -51,6 +51,7 @@ function showError(message) {
 function updateProgress(job) {
   const phase = job.phase;
   const index = phases.indexOf(phase);
+  $('upload-progress').classList.toggle('hidden', phase !== 'uploading');
   const descriptions = {
     uploading: '正在上传题面 PDF 和标准程序，上传完成后会开始评测。',
     queued: '任务已创建，等待处理。',
@@ -68,6 +69,42 @@ function updateProgress(job) {
   document.querySelectorAll('.progress-stages span').forEach((element, itemIndex) => {
     element.classList.toggle('current', itemIndex === index);
     element.classList.toggle('done', itemIndex < index);
+  });
+}
+
+function updateUploadProgress(loaded, total) {
+  if (total <= 0) return;
+  const percent = Math.max(0, Math.min(100, Math.round(loaded / total * 100)));
+  $('upload-percent').textContent = `${percent}%`;
+  $('upload-progress-fill').style.width = `${percent}%`;
+  $('upload-progress-track').setAttribute('aria-valuenow', String(percent));
+  if (percent === 100) $('progress-detail').textContent = '文件上传完成，正在等待服务器创建评测任务。';
+}
+
+function uploadJob(payload) {
+  return new Promise((resolve, reject) => {
+    const request = new XMLHttpRequest();
+    request.open('POST', '/jobs');
+    request.setRequestHeader('X-XCPC-ProblemJudger-Request', '1');
+    request.timeout = 120000;
+    request.upload.addEventListener('progress', (event) => {
+      if (event.lengthComputable) updateUploadProgress(event.loaded, event.total);
+    });
+    request.upload.addEventListener('load', () => updateUploadProgress(1, 1));
+    request.addEventListener('load', () => {
+      let body;
+      try { body = JSON.parse(request.responseText); }
+      catch { reject(new Error('服务器返回了无法读取的上传结果。')); return; }
+      if (request.status < 200 || request.status >= 300) {
+        reject(new Error(typeof body.detail === 'string' ? body.detail : '提交失败'));
+        return;
+      }
+      if (!body.job_id) { reject(new Error('服务器没有返回任务编号。')); return; }
+      resolve(body.job_id);
+    });
+    request.addEventListener('error', () => reject(new Error('上传失败，请检查网络连接。')));
+    request.addEventListener('timeout', () => reject(new Error('上传超时。服务端可能仍在处理，请到“任务与历史”查看。')));
+    request.send(payload);
   });
 }
 
@@ -118,15 +155,13 @@ form.addEventListener('submit', async (event) => {
   resultPanel.classList.add('hidden');
   progressPanel.classList.remove('hidden');
   updateProgress({ phase: 'uploading', completed: 0, total: 0 });
+  updateUploadProgress(0, 1);
   progressPanel.scrollIntoView({ behavior: 'smooth', block: 'center' });
   try {
-    const response = await fetch('/jobs', { method: 'POST', headers: { 'X-XCPC-ProblemJudger-Request': '1' },
-      body: new FormData(form), signal: AbortSignal.timeout(120000) });
-    const job = await response.json();
-    if (!response.ok) throw new Error(typeof job.detail === 'string' ? job.detail : '提交失败');
-    sessionStorage.setItem(activeJobKey, job.job_id);
+    const jobId = await uploadJob(new FormData(form));
+    sessionStorage.setItem(activeJobKey, jobId);
     updateProgress({ phase: 'queued', completed: 0, total: 0 });
-    const report = await awaitJob(job.job_id);
+    const report = await awaitJob(jobId);
     showReport(report);
   } catch (error) {
     showError(error.name === 'TimeoutError'
