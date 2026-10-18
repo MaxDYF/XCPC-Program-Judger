@@ -8,15 +8,13 @@
 [![CI](https://github.com/MaxDYF/XCPC-Program-Judger/actions/workflows/ci.yml/badge.svg)](https://github.com/MaxDYF/XCPC-Program-Judger/actions/workflows/ci.yml)
 [![MIT License](https://img.shields.io/badge/License-MIT-2da891)](../LICENSE)
 
-[English](../README.md) · [快速开始](#-快速开始) · [工作原理](#-工作原理) · [验证](#-验证)
+[English](../README.md) · [快速开始](#-快速开始) · [工作原理](#-工作原理) · [测试](#-测试)
 
 </div>
 
 ---
 
-## 📢 项目状态
-
-项目已提供网页、命令行、异步任务进度和持久化评测历史。每份完整报告包含两项独立结果：**0–5 整数档位的题面清晰度**，以及**估计 Codeforces rating**。难度分由参考题标定，不是 Codeforces 官方定级，也不能证明上传的 std 正确。
+XCPC题目评分器接收题面 PDF 和对应 std 源码，输出**0–5 整数档位的题面清晰度**与**估计 Codeforces rating**。网页和命令行使用同一套评测流程。难度分不是 Codeforces 官方定级，也不能证明上传的 std 正确。
 
 ## 🌟 功能亮点
 
@@ -137,15 +135,14 @@ Git 仓库排除 `data/`、上传文件、报告、私有参考语料、PDF、SQ
 
 ---
 
-## ✅ 验证
+## ✅ 测试
 
 ```bash
 .venv/bin/pytest -q
 .venv/bin/python scripts/check_release.py
-PYTHONPATH=src .venv/bin/python scripts/verify_codeforces_sample.py
 ```
 
-单元测试使用假的 agent 和参考题，验证清晰度权重、输入隔离、rating 标定、题解代码提取和 PDF 检查，不产生付费模型请求。实时抽样脚本需要模型凭据。2026-10-18 的一次抽样尝试了 20 道 Codeforces 题，核验通过 10 道，覆盖 CF 800–2200。[只含元数据的审计记录](../validation/codeforces-sample.json) 保存来源链接、长度、哈希和失败原因，不保存题面、源码或密钥。[历史链路冒烟结果](../validation/end-to-end-smoke.json) 使用旧版 10 分制清晰度标准，不能当成当前 5 分制结果。这些样本也不足以证明整体 rating 估计精度。
+测试套件可在本地运行，不需要模型凭据。发布检查会扫描 Git 暂存区中的私有数据和疑似密钥。若需单独检查实时 Codeforces 读取功能，请配置模型凭据后运行 `PYTHONPATH=src .venv/bin/python scripts/verify_codeforces_sample.py`。
 
 ---
 

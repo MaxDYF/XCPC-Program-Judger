@@ -8,15 +8,13 @@
 [![CI](https://github.com/MaxDYF/XCPC-Program-Judger/actions/workflows/ci.yml/badge.svg)](https://github.com/MaxDYF/XCPC-Program-Judger/actions/workflows/ci.yml)
 [![MIT License](https://img.shields.io/badge/License-MIT-2da891)](LICENSE)
 
-[简体中文](docs/README-CN.md) · [Quick Start](#-quick-start) · [How It Works](#-how-it-works) · [Validation](#-validation)
+[简体中文](docs/README-CN.md) · [Quick Start](#-quick-start) · [How It Works](#-how-it-works) · [Testing](#-testing)
 
 </div>
 
 ---
 
-## 📢 Project Status
-
-The web app, command-line interface, asynchronous job tracking, and persistent report history are available. A completed report contains two separate results: a **0–5 statement clarity grade** and an **estimated Codeforces rating**. The rating is an estimate derived from reference problems; it is neither an official Codeforces rating nor a proof that the submitted solution is correct.
+XCPC-ProblemJudger accepts a statement PDF and reference solution source file, then produces a **0–5 statement clarity grade** and an **estimated Codeforces rating**. The web app and CLI share the same evaluation pipeline. The rating is neither an official Codeforces rating nor a proof that the submitted solution is correct.
 
 ## 🌟 Highlights
 
@@ -137,15 +135,14 @@ Live mode uses Codeforces problem metadata, problem pages, author Tutorial links
 
 ---
 
-## ✅ Validation
+## ✅ Testing
 
 ```bash
 .venv/bin/pytest -q
 .venv/bin/python scripts/check_release.py
-PYTHONPATH=src .venv/bin/python scripts/verify_codeforces_sample.py
 ```
 
-Unit tests use fake agents and references to exercise scoring weights, input isolation, calibration, editorial extraction, and PDF validation without paid model calls. The live sample script requires model credentials. On 2026-10-18, it attempted 20 Codeforces references and verified 10 across CF 800–2200. The [metadata-only audit](validation/codeforces-sample.json) records URLs, lengths, hashes, and failure reasons without retaining statements, code, or keys. A [historical end-to-end smoke result](validation/end-to-end-smoke.json) used an earlier 10-point clarity rubric and is not a current 5-point result. Neither sample establishes population-level rating accuracy.
+The test suite runs locally without model credentials. The release check inspects staged Git files for private data and likely secrets. To check live Codeforces retrieval separately, run `PYTHONPATH=src .venv/bin/python scripts/verify_codeforces_sample.py` with model credentials configured.
 
 ---
 
