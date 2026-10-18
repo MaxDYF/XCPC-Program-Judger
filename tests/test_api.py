@@ -107,7 +107,7 @@ def test_history_page_persists_report_without_uploaded_files(monkeypatch, tmp_pa
             return {"score": 1600, "reference_count": 5,
                     "analysis": {"summary": "图上最短路", "algorithm": "BFS", "complexity": "O(n+m)",
                                  "inferred_tags": ["graphs"]},
-                    "statement_clarity": {"score": 4, "max_score": 5, "verdict": "accept",
+                    "statement_clarity": {"score": 4, "weighted_score": 3.6, "max_score": 5, "verdict": "accept",
                                           "neutral_statement": "输入一个图，输出最短距离。"},
                     "ranking": []}
 
@@ -124,6 +124,7 @@ def test_history_page_persists_report_without_uploaded_files(monkeypatch, tmp_pa
     listing = client.get("/api/history").json()
     assert listing["total"] == 1
     assert listing["items"][0]["title"] == "图上最短路"
+    assert listing["items"][0]["clarity_score"] == 3.6
     detail = client.get(f"/api/history/{history_id}").json()
     assert detail["report"]["score"] == 1600
     assert client.get("/api/history/unknown").status_code == 404

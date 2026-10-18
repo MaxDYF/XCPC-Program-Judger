@@ -54,14 +54,18 @@ def test_blind_boundary_and_scoring(monkeypatch):
     service = JudgingService(AnalystAgent(llm), BlindJudgeAgent(llm), FakeProvider(), 10)
     result = service.evaluate(b"pdf", b"// TARGET\nint main() { return 0; }")
     assert result["score"] == 800
-    assert result["statement_clarity"]["score"] == 5
+    assert result["statement_clarity"]["score"] == 4.6
     assert result["statement_clarity"]["weighted_score"] == 4.6
+    assert result["statement_clarity"]["verdict_score"] == 5
     assert result["statement_clarity"]["verdict"] == "strong accept"
     assert result["statement_clarity"]["passed"] is True
     assert result["relative_percentile"] == 0
     assert result["target_rank"] == 1
     assert len(result["ranking"]) == 11
     assert result["calibration"]["rounds"] == 3
+    assert llm.calls[1][1] == {"statement": "A complete target statement. " * 10}
+    assert set(llm.calls[2][1]) == {"original_statement", "neutral_statement", "unresolved_ambiguities"}
+    assert all("TARGET" not in json.dumps(llm.calls[i][1]) for i in (1, 2))
     judge_payload = llm.calls[3][1]
     assert set(judge_payload) == {"problems"}
     assert all(set(p) == {"id", "statement", "standard_solution"} for p in judge_payload["problems"])
@@ -110,8 +114,9 @@ def test_clarity_agent_uses_five_point_integer_criteria_without_std_or_editorial
     llm = FakeLLM()
     interpretation = InterpretationAgent(llm).interpret("A statement")
     result = ClarityJudgeAgent(llm).score("A statement", interpretation)
-    assert result["score"] == 5
+    assert result["score"] == 4.6
     assert result["weighted_score"] == 4.6
+    assert result["verdict_score"] == 5
     assert result["passing_score"] == 3
     assert sum(item["weight"] for item in result["criteria"]) == 1
     assert all(item["max_score"] == 5 and type(item["score"]) is int for item in result["criteria"])
@@ -134,10 +139,30 @@ def test_clarity_weighted_score_can_fail_without_changing_difficulty_score():
     result = ClarityJudgeAgent(LowClarityLLM()).score("An unclear task", {
         "neutral_statement": "输入一个整数，输出指定操作后的结果。",
         "unresolved_ambiguities": ["操作规则在题面中未写明"]})
-    assert result["score"] == 2
+    assert result["score"] == 2.4
     assert result["weighted_score"] == 2.4
+    assert result["verdict_score"] == 2
     assert result["verdict"] == "weak reject"
     assert result["passed"] is False
+
+
+def test_clarity_verdict_rounds_displayed_decimal_half_up():
+    class BoundaryLLM(FakeLLM):
+        def ask_json(self, system, payload):
+            if "statement clarity judge" in system:
+                return {"scores": {"objective_io": 0, "language": 2, "information_focus": 0,
+                                   "background_independence": 5},
+                        "notes": {key: "评分边界测试。" for key in
+                                  ("objective_io", "language", "information_focus", "background_independence")},
+                        "summary": "评分边界测试。", "issues": []}
+            return super().ask_json(system, payload)
+
+    result = ClarityJudgeAgent(BoundaryLLM()).score("statement", {
+        "neutral_statement": "输入一个整数，输出该整数。", "unresolved_ambiguities": []})
+    assert result["score"] == 2.5  # weighted total is 2.45 before one-decimal rounding
+    assert result["verdict_score"] == 3
+    assert result["verdict"] == "weak accept"
+    assert result["passed"] is True
 
 
 def test_interpreter_treats_none_marker_as_empty():

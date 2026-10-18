@@ -55,12 +55,16 @@ class HistoryStore:
     def list(self, limit: int = 30, offset: int = 0) -> dict[str, Any]:
         with self._connect() as connection:
             total = connection.execute("SELECT COUNT(*) FROM evaluations").fetchone()[0]
-            rows = connection.execute("""SELECT id, created_at, title, score, clarity_score, reference_count
+            rows = connection.execute("""SELECT id, created_at, title, score, clarity_score, reference_count, report_json
                 FROM evaluations ORDER BY created_at DESC, id DESC LIMIT ? OFFSET ?""",
                 (limit, offset)).fetchall()
-        return {"total": total, "items": [dict(zip(
-            ("id", "created_at", "title", "score", "clarity_score", "reference_count"), row))
-            for row in rows]}
+        items = []
+        for row in rows:
+            item = dict(zip(("id", "created_at", "title", "score", "clarity_score", "reference_count"), row[:6]))
+            clarity = (json.loads(row[6]).get("statement_clarity") or {})
+            item["clarity_score"] = clarity.get("weighted_score", item["clarity_score"])
+            items.append(item)
+        return {"total": total, "items": items}
 
     def get(self, history_id: str) -> dict[str, Any] | None:
         with self._connect() as connection:

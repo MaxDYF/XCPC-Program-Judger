@@ -24,6 +24,11 @@ function displayDate(seconds) {
   return Number.isFinite(Number(seconds)) ? dateFormatter.format(new Date(Number(seconds) * 1000)) : '时间未知';
 }
 
+function displayClarityScore(value) {
+  return value !== null && value !== undefined && value !== '' && Number.isFinite(Number(value))
+    ? Number(value).toFixed(1) : '—';
+}
+
 function showMessage(id, message) {
   $(id).textContent = message;
   $(id).classList.remove('hidden');
@@ -59,7 +64,7 @@ function renderListItem(item, position) {
   main.append(title, date);
   const scores = document.createElement('span');
   scores.className = 'history-row-scores';
-  for (const [label, value] of [['CF rating', item.score ?? '—'], ['题面清晰度', `${item.clarity_score ?? '—'} / 5`]]) {
+  for (const [label, value] of [['CF rating', item.score ?? '—'], ['题面清晰度', `${displayClarityScore(item.clarity_score)} / 5`]]) {
     const cell = document.createElement('span');
     const name = document.createElement('small'); name.textContent = label;
     const number = document.createElement('b'); number.textContent = String(value);
@@ -218,10 +223,11 @@ function renderDetail(entry) {
   $('detail-date').textContent = `${displayDate(entry.created_at)} · 历史记录`;
   $('detail-rating').textContent = report.score ?? '—';
   const clarityMax = Number(clarity.max_score) > 0 ? Number(clarity.max_score) : 5;
-  const clarityScore = Number(clarity.score);
-  const hasClarityScore = clarity.score !== null && clarity.score !== undefined
-    && clarity.score !== '' && Number.isFinite(clarityScore);
-  $('detail-clarity').textContent = hasClarityScore ? String(clarity.score) : '—';
+  const totalScore = clarity.weighted_score ?? clarity.score;
+  const clarityScore = Number(totalScore);
+  const hasClarityScore = totalScore !== null && totalScore !== undefined
+    && totalScore !== '' && Number.isFinite(clarityScore);
+  $('detail-clarity').textContent = displayClarityScore(totalScore);
   $('detail-clarity-max').textContent = `/ ${clarityMax}`;
   const clarityRing = $('detail-clarity-ring');
   const sectionRing = $('detail-section-ring');
@@ -232,7 +238,7 @@ function renderDetail(entry) {
     if (hasClarityScore) ring.setAttribute('aria-valuenow', String(clarityScore));
     else ring.removeAttribute('aria-valuenow');
   }
-  $('detail-section-score').textContent = hasClarityScore ? String(clarity.score) : '—';
+  $('detail-section-score').textContent = displayClarityScore(totalScore);
   $('detail-section-max').textContent = `/ ${clarityMax}`;
   const verdictText = clarity.verdict ? `${clarity.verdict} · ${verdictLabels[clarity.verdict] || ''}` : '评分档位未知';
   $('detail-verdict').textContent = verdictText;

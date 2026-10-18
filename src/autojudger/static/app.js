@@ -179,13 +179,13 @@ function showReport(data) {
   $('stability-badge').textContent = `多轮排序稳定性：${stabilityLabels[data.calibration.stability] || '未知'}`;
   const clarity = data.statement_clarity;
   const clarityMax = clarity.max_score || 5;
-  $('clarity-score').textContent = String(clarity.score);
+  const clarityScore = Number(clarity.weighted_score ?? clarity.score);
+  $('clarity-score').textContent = Number.isFinite(clarityScore) ? clarityScore.toFixed(1) : '—';
   $('clarity-max-label').textContent = `/ ${clarityMax}`;
-  $('clarity-passing-score').textContent = String(clarity.passing_score);
-  $('clarity-pass-max').textContent = String(clarityMax);
-  $('clarity-weighted-score').textContent = clarity.weighted_score == null ? '—' : Number(clarity.weighted_score).toFixed(1);
-  $('clarity-method').textContent = `四项 ${clarityMax} 分制 · ${clarityMax === 5 ? '整数档位' : '加权汇总'}`;
-  $('clarity-ring').style.setProperty('--clarity-angle', `${Math.max(0, Math.min(360, clarity.score / clarityMax * 360))}deg`);
+  $('clarity-verdict-score').textContent = Number.isFinite(clarityScore)
+    ? String(clarity.verdict_score ?? Math.floor(clarityScore + 0.5)) : '—';
+  $('clarity-method').textContent = '总分保留一位小数 · 档位四舍五入';
+  $('clarity-ring').style.setProperty('--clarity-angle', `${Math.max(0, Math.min(360, clarityScore / clarityMax * 360))}deg`);
   const verdictLabels = { 'strong reject': '强烈拒绝', reject: '拒绝', 'weak reject': '倾向拒绝',
     'weak accept': '倾向接受', accept: '接受', 'strong accept': '强烈接受' };
   $('clarity-status').textContent = clarity.verdict ? `${clarity.verdict} · ${verdictLabels[clarity.verdict]}`

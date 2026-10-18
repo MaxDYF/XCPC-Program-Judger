@@ -119,10 +119,12 @@ class ClarityJudgeAgent:
             item["reason"] = prose[f"note_{item['key']}"]
         weighted = sum(Decimal(item["score"]) * Decimal(str(item["weight"]))
                        for item in criteria)
-        score = int(weighted.quantize(Decimal("1"), rounding=ROUND_HALF_UP))
-        weighted_score = float(weighted.quantize(Decimal("0.1"), rounding=ROUND_HALF_UP))
-        return {"score": score, "weighted_score": weighted_score, "max_score": 5,
-                "passing_score": 3, "passed": score >= 3, "verdict": CLARITY_VERDICTS[score],
+        score = weighted.quantize(Decimal("0.1"), rounding=ROUND_HALF_UP)
+        verdict_score = int(score.quantize(Decimal("1"), rounding=ROUND_HALF_UP))
+        return {"score": float(score), "weighted_score": float(score),
+                "verdict_score": verdict_score, "max_score": 5,
+                "passing_score": 3, "passed": verdict_score >= 3,
+                "verdict": CLARITY_VERDICTS[verdict_score],
                 "criteria": criteria, "summary": prose["summary"],
                 "issues": [prose[f"issue_{i}"] for i in range(len(issues))],
                 **interpretation}
