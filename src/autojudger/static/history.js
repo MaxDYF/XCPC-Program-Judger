@@ -144,11 +144,41 @@ function renderCriteria(clarity) {
   host.replaceChildren();
   for (const criterion of clarity.criteria || []) {
     const row = document.createElement('div'); row.className = 'history-criterion';
+    row.classList.toggle('is-reject', String(criterion.verdict || '').includes('reject'));
+    const maxScore = Number(criterion.max_score) > 0 ? Number(criterion.max_score)
+      : Number(clarity.max_score) > 0 ? Number(clarity.max_score) : 5;
+    const numericScore = Number(criterion.score);
+    const hasScore = criterion.score !== null && criterion.score !== undefined
+      && criterion.score !== '' && Number.isFinite(numericScore);
+    const ring = document.createElement('div');
+    ring.className = 'history-criterion-ring';
+    ring.style.setProperty('--criterion-angle',
+      `${hasScore ? Math.max(0, Math.min(360, numericScore / maxScore * 360)) : 0}deg`);
+    ring.setAttribute('role', 'progressbar');
+    ring.setAttribute('aria-label', criterion.label || criterion.key || '评分项');
+    ring.setAttribute('aria-valuemin', '0');
+    ring.setAttribute('aria-valuemax', String(maxScore));
+    if (hasScore) ring.setAttribute('aria-valuenow', String(numericScore));
+    const ringInner = document.createElement('div');
+    const score = document.createElement('strong');
+    score.textContent = hasScore ? String(criterion.score) : '—';
+    const denominator = document.createElement('small');
+    denominator.textContent = `/${maxScore}`;
+    ringInner.append(score, denominator);
+    ring.append(ringInner);
     const top = document.createElement('div'); top.className = 'history-criterion-head';
-    const label = document.createElement('span'); label.textContent = criterion.label || criterion.key;
-    const score = document.createElement('small');
-    score.textContent = `${criterion.score} / ${criterion.max_score || clarity.max_score || 5} · 权重 ${Math.round((criterion.weight || 0) * 100)}% · ${criterion.verdict || ''}`;
-    top.append(label, score);
+    const copy = document.createElement('div'); copy.className = 'history-criterion-copy';
+    const label = document.createElement('strong'); label.className = 'history-criterion-label';
+    label.textContent = criterion.label || criterion.key || '评分项';
+    const meta = document.createElement('div'); meta.className = 'history-criterion-meta';
+    const weight = document.createElement('span');
+    weight.textContent = `权重 ${Math.round((criterion.weight || 0) * 100)}%`;
+    const verdict = document.createElement('span');
+    verdict.className = 'history-criterion-verdict';
+    verdict.textContent = verdictLabels[criterion.verdict] || criterion.verdict || '未评定';
+    meta.append(weight, verdict);
+    copy.append(label, meta);
+    top.append(ring, copy);
     const reason = document.createElement('p'); reason.textContent = criterion.reason || '';
     row.append(top, reason); host.append(row);
   }

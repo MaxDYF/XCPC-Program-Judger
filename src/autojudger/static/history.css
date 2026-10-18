@@ -45,10 +45,21 @@
 .history-wide { margin-top:15px; }
 .history-prewrap { white-space:pre-wrap; }
 .history-criteria { display:grid; gap:10px; margin-top:15px; }
-.history-criterion { padding:10px 12px; border:1px solid #e9eff1; border-radius:8px; background:#f8fbfb; }
-.history-criterion-head { display:flex; justify-content:space-between; gap:10px; color:#21475a; font-size:11px; font-weight:800; }
-.history-criterion-head small { color:#15978a; font-size:10px; }
-.history-criterion p { margin:4px 0 0; }
+.history-criterion { min-width:0; padding:15px; border:1px solid #dcebe9; border-radius:12px; background:#fbfefd; }
+.history-criterion-head { display:flex; align-items:center; gap:12px; min-width:0; }
+.history-criterion-ring { --criterion-color:#32cdae; flex:none; display:grid; place-items:center; width:62px; height:62px; border-radius:50%; background:conic-gradient(var(--criterion-color) var(--criterion-angle),#e5eef0 var(--criterion-angle)); }
+.history-criterion-ring > div { display:flex; align-items:baseline; justify-content:center; gap:1px; width:49px; height:49px; padding-top:13px; border-radius:50%; background:#fff; color:#174457; }
+.history-criterion-ring strong { font-size:19px; line-height:1; }
+.history-criterion-ring small { font-size:9px; color:#8299a6; }
+.history-criterion.is-reject { border-color:#f1ddd1; background:#fffdfb; }
+.history-criterion.is-reject .history-criterion-ring { --criterion-color:#df9a69; }
+.history-criterion-copy { min-width:0; flex:1; }
+.history-criterion-label { display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:#21475a; font-size:12px; font-weight:800; }
+.history-criterion-meta { display:flex; align-items:center; flex-wrap:nowrap; gap:7px; margin-top:5px; color:#8299a6; font-size:10px; white-space:nowrap; }
+.history-criterion-verdict { color:#129784; font-weight:800; }
+.history-criterion.is-reject .history-criterion-verdict { color:#b97a4e; }
+.history-criterion p { margin:13px 0 0; color:#677f8e; font-size:11px; line-height:1.7; }
+@media (max-width:1280px) { .history-detail-grid { grid-template-columns:1fr; } }
 .history-ranking { list-style:none; margin:13px 0 0; padding:0; }
 .history-ranking li { display:grid; grid-template-columns:36px minmax(0,1fr) auto; gap:10px; align-items:center; min-height:48px; border-top:1px solid #edf1f4; }
 .history-ranking li.target { margin:0 -9px; padding:0 9px; border-radius:8px; background:#eaf9f4; border-top-color:transparent; color:#127b6f; font-weight:800; }
@@ -98,7 +109,6 @@
 .history-clarity-copy .clarity-status { margin:0; }
 .history-clarity-copy p { margin:12px 0 0; color:#c9dce8; font-size:11px; line-height:1.75; }
 .history-criteria { grid-template-columns:repeat(2,minmax(0,1fr)); margin-top:16px; }
-.history-criterion { border-color:#dcebe9; background:#fbfefd; }
 .history-card { box-shadow:0 8px 24px #0d355008; }
 .history-card h2 { color:#193b52; }
 @media (max-width:650px) {
