@@ -187,7 +187,17 @@ function renderDetail(entry) {
   $('detail-title').textContent = analysis.summary || '未命名题目';
   $('detail-date').textContent = `${displayDate(entry.created_at)} · 历史记录`;
   $('detail-rating').textContent = report.score ?? '—';
-  $('detail-clarity').textContent = `${clarity.score ?? '—'} / ${clarity.max_score || 5}`;
+  const clarityMax = Number(clarity.max_score) > 0 ? Number(clarity.max_score) : 5;
+  const clarityScore = Number(clarity.score);
+  const hasClarityScore = clarity.score !== null && clarity.score !== undefined
+    && clarity.score !== '' && Number.isFinite(clarityScore);
+  $('detail-clarity').textContent = hasClarityScore ? String(clarity.score) : '—';
+  $('detail-clarity-max').textContent = `/ ${clarityMax}`;
+  const clarityRing = $('detail-clarity-ring');
+  clarityRing.style.setProperty('--clarity-angle', `${hasClarityScore ? Math.max(0, Math.min(360, clarityScore / clarityMax * 360)) : 0}deg`);
+  clarityRing.setAttribute('aria-valuemax', String(clarityMax));
+  if (hasClarityScore) clarityRing.setAttribute('aria-valuenow', String(clarityScore));
+  else clarityRing.removeAttribute('aria-valuenow');
   $('detail-verdict').textContent = clarity.verdict ? `${clarity.verdict} · ${verdictLabels[clarity.verdict] || ''}` : '评分档位未知';
   $('detail-references').textContent = report.reference_count ?? '—';
   $('detail-stability').textContent = `盲排稳定性：${stabilityLabels[calibration.stability] || '未知'}`;
