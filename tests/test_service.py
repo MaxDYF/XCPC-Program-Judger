@@ -34,7 +34,11 @@ class FakeLLM:
         ids = [p["id"] for p in payload["problems"]]
         # Put the target first; fake provider marks references with REF in code.
         target = next(p["id"] for p in payload["problems"] if "TARGET" in p["standard_solution"])
-        return {"order": [target] + [x for x in ids if x != target], "reason": "目标题最容易。"}
+        return {"order": [target] + [x for x in ids if x != target], "reason": "目标题最容易。",
+                "assessments": [{"id": ident, "modeling": "可直接建立图模型。",
+                                 "algorithm_proof": "使用搜索并证明可达性。",
+                                 "implementation": "状态维护较简单。",
+                                 "verification": "需检查空图与边界。"} for ident in ids]}
 
 
 class FakeProvider:
@@ -63,6 +67,8 @@ def test_blind_boundary_and_scoring(monkeypatch):
     assert result["target_rank"] == 1
     assert len(result["ranking"]) == 11
     assert result["calibration"]["rounds"] == 3
+    assert result["difficulty_assessment"]["modeling"] == "可直接建立图模型。"
+    assert result["difficulty_assessment"]["implementation"] == "状态维护较简单。"
     assert llm.calls[1][1] == {"statement": "A complete target statement. " * 10}
     assert set(llm.calls[2][1]) == {"original_statement", "neutral_statement", "unresolved_ambiguities"}
     assert all("TARGET" not in json.dumps(llm.calls[i][1]) for i in (1, 2))
@@ -196,13 +202,17 @@ def test_english_agent_prose_is_localized_without_changing_scores_or_tags():
                                   ("objective_io", "language", "information_focus", "background_independence")},
                         "summary": "The input rules are clear.", "issues": ["One term is undefined."]}
             ids = [problem["id"] for problem in payload["problems"]]
-            return {"order": ids, "reason": "The target needs only BFS."}
+            return {"order": ids, "reason": "The target needs only BFS.",
+                    "assessments": [{"id": ident, "modeling": "Model as a graph.",
+                                     "algorithm_proof": "Prove BFS reachability.",
+                                     "implementation": "Maintain a queue.",
+                                     "verification": "Check empty cases."} for ident in ids]}
 
     llm = EnglishLLM()
     analysis = AnalystAgent(llm).analyze("statement", "int main() {}")
     interpretation = InterpretationAgent(llm).interpret("statement")
     clarity = ClarityJudgeAgent(llm).score("statement", interpretation)
-    order, reason = BlindJudgeAgent(llm).rank([
+    order, reason, assessments = BlindJudgeAgent(llm).rank([
         BlindProblem(f"p_{i}", "statement", "int main() {}") for i in range(11)])
 
     assert analysis.tags == ("graphs",)
@@ -215,8 +225,20 @@ def test_english_agent_prose_is_localized_without_changing_scores_or_tags():
     assert "中文说明" in clarity["issues"][0]
     assert order == [f"p_{i}" for i in range(11)]
     assert "中文说明" in reason
+    assert all("中文说明" in value for profile in assessments.values() for value in profile.values())
     assert all(set(item) == {"texts"} for item in llm.translation_payloads)
     assert all("standard_solution" not in json.dumps(item) for item in llm.translation_payloads)
+
+
+def test_blind_judge_requires_assessment_for_every_problem():
+    class ShallowLLM:
+        def ask_json(self, system, payload):
+            return {"order": [item["id"] for item in payload["problems"]],
+                    "reason": "只按代码长度排列。", "assessments": []}
+
+    problems = [BlindProblem(f"p_{i}", "statement", "int main() {}") for i in range(6)]
+    with pytest.raises(JudgingError, match="difficulty assessment"):
+        BlindJudgeAgent(ShallowLLM()).rank(problems)
 
 
 def test_gpt6_chat_request_omits_unsupported_temperature():

@@ -189,14 +189,17 @@ class JudgingService:
                      for anonymous_id, ref in reference_ids.items())
         orders: list[list[str]] = []
         reasons: list[str] = []
+        target_assessments: list[dict[str, str]] = []
         emit("ranking", 0, self.ranking_rounds)
         for round_index in range(self.ranking_rounds):
             random.SystemRandom().shuffle(blind)
-            order, reason = self.judge.rank(blind)
+            order, reason, assessments = self.judge.rank(blind)
             orders.append(order)
             reasons.append(reason)
+            target_assessments.append(assessments[target_id])
             emit("ranking", round_index + 1, self.ranking_rounds)
         calibrated = calibrate(target_id, reference_ids, orders)
+        representative_round = sorted(range(len(orders)), key=lambda i: orders[i].index(target_id))[len(orders) // 2]
         anchors = sorted(reference_ids, key=lambda ident: (reference_ids[ident].rating,
                                                            reference_ids[ident].contest_id,
                                                            reference_ids[ident].index))
@@ -223,7 +226,8 @@ class JudgingService:
                 "statement_clarity": clarity,
                 "analysis": {"summary": analysis.summary, "algorithm": analysis.algorithm,
                              "complexity": analysis.complexity, "inferred_tags": list(analysis.tags)},
-                "ranking": ranking, "judge_reason": reasons[0],
+                "ranking": ranking, "judge_reason": reasons[representative_round],
+                "difficulty_assessment": target_assessments[representative_round],
                 "calibration": {"method": "多轮匿名排序、成对比较的单调校准、最小冲突插入、相邻 Codeforces rating 插值",
                                 "rounds": self.ranking_rounds,
                                 "raw_target_ranks": list(calibrated.raw_ranks),

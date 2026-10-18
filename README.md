@@ -18,7 +18,7 @@
 
 - Upload a statement PDF and reference solution to receive a **0–5 statement clarity score** (one decimal place; verdict rounded to the nearest integer) and an **estimated Codeforces rating**.
 - Calibrate difficulty against **5–20 Codeforces problems** with similar tags and author editorials; exclude the submitted problem if it appears among the references.
-- Use independent agents for statement review and anonymous difficulty ranking. The report shows where model rankings disagree with the reference rating gradient.
+- Use independent agents for statement review and anonymous difficulty ranking. Ranking considers modeling, algorithm discovery and proof, implementation, and edge-case debugging; the report shows disagreements with the reference rating gradient.
 - Track running evaluations and browse completed reports in the web app. Reports are written in Chinese; quotations may retain their original language.
 
 ## 🚀 Quick Start

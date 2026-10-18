@@ -24,7 +24,7 @@ def main() -> int:
     try:
         format_llm = ChatAgent(model=os.getenv("FORMAT_MODEL") or "gpt-6-luna")
         analyst_llm = ChatAgent(model=os.getenv("ANALYST_MODEL"))
-        judge_llm = ChatAgent(model=os.getenv("JUDGE_MODEL") or "gpt-6-sol")
+        judge_llm = ChatAgent(model=os.getenv("JUDGE_MODEL") or "gpt-6-sol", timeout_seconds=360)
         provider = (ManifestProvider(args.manifest) if args.manifest else CodeforcesProvider(
             extractor=EditorialExtractionAgent(ChatAgent(model=os.getenv("EXTRACTOR_MODEL")))))
         service = JudgingService(AnalystAgent(analyst_llm), BlindJudgeAgent(judge_llm, format_llm), provider, args.references,

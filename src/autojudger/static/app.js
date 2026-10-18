@@ -283,6 +283,14 @@ function showReport(data) {
     tags.append(chip);
   }
   $('ranking-count').textContent = `${data.reference_count} 道参考题`;
+  const difficulty = data.difficulty_assessment;
+  $('difficulty-factors').classList.toggle('hidden', !difficulty);
+  if (difficulty) {
+    $('difficulty-modeling').textContent = difficulty.modeling || '—';
+    $('difficulty-algorithm-proof').textContent = difficulty.algorithm_proof || '—';
+    $('difficulty-implementation').textContent = difficulty.implementation || '—';
+    $('difficulty-verification').textContent = difficulty.verification || '—';
+  }
   const list = $('ranking-list');
   list.replaceChildren();
   for (const item of data.ranking) {

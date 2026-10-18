@@ -13,7 +13,7 @@ from typing import Any
 REPORT_FIELDS = (
     "history_id", "score", "score_scale", "relative_percentile", "target_rank",
     "total_problems", "reference_count", "excluded_self_references",
-    "statement_clarity", "analysis", "ranking", "judge_reason", "calibration",
+    "statement_clarity", "analysis", "ranking", "judge_reason", "difficulty_assessment", "calibration",
     "limitations",
 )
 

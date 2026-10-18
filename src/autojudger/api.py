@@ -46,7 +46,7 @@ def _service(reference_count: int) -> JudgingService:
     manifest = os.getenv("REFERENCE_MANIFEST")
     format_llm = ChatAgent(model=os.getenv("FORMAT_MODEL") or "gpt-6-luna")
     analyst_llm = ChatAgent(model=os.getenv("ANALYST_MODEL"))
-    judge_llm = ChatAgent(model=os.getenv("JUDGE_MODEL") or "gpt-6-sol")
+    judge_llm = ChatAgent(model=os.getenv("JUDGE_MODEL") or "gpt-6-sol", timeout_seconds=360)
     interpretation_llm = ChatAgent(model=os.getenv("INTERPRETER_MODEL"))
     clarity_llm = ChatAgent(model=os.getenv("CLARITY_MODEL") or "gpt-6-sol")
     provider = (ManifestProvider(manifest) if manifest else CodeforcesProvider(

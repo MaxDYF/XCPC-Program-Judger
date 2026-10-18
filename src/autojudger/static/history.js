@@ -263,8 +263,16 @@ function renderDetail(entry) {
     const row = document.createElement('li'); row.textContent = issue; issueList.append(row);
   }
   $('detail-rank').textContent = `第 ${report.target_rank ?? '—'} / ${report.total_problems ?? '—'} 位`;
+  const difficulty = report.difficulty_assessment;
+  $('detail-difficulty-factors').classList.toggle('hidden', !difficulty);
+  if (difficulty) {
+    $('detail-difficulty-modeling').textContent = difficulty.modeling || '—';
+    $('detail-difficulty-algorithm-proof').textContent = difficulty.algorithm_proof || '—';
+    $('detail-difficulty-implementation').textContent = difficulty.implementation || '—';
+    $('detail-difficulty-verification').textContent = difficulty.verification || '—';
+  }
   renderRanking(report);
-  $('detail-judge-reason').textContent = `模型判断：${report.judge_reason || '未提供说明'}`;
+  $('detail-judge-reason').textContent = `排序依据：${report.judge_reason || '未提供说明'}`;
   $('detail-calibration').textContent = `校准：${calibration.method || '—'}；梯度位置 ${report.relative_percentile ?? '—'}%；参考题顺序逆转率 ${Math.round((calibration.anchor_inversion_rate || 0) * 100)}%。`;
   $('detail-content').classList.remove('hidden');
 }

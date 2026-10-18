@@ -213,8 +213,9 @@ def test_model_routing_keeps_scoring_on_sol_and_formatting_on_luna(monkeypatch):
     monkeypatch.setenv("OPENAI_MODEL", "gpt-6-luna")
 
     class FakeChatAgent:
-        def __init__(self, model=None):
+        def __init__(self, model=None, timeout_seconds=180):
             self.model = model or "gpt-6-luna"
+            self.timeout_seconds = timeout_seconds
 
     monkeypatch.setattr(api, "ChatAgent", FakeChatAgent)
     service = api._service(10)
@@ -222,6 +223,7 @@ def test_model_routing_keeps_scoring_on_sol_and_formatting_on_luna(monkeypatch):
     assert service.interpreter.llm.model == "gpt-6-luna"
     assert service.provider.extractor.llm.model == "gpt-6-luna"
     assert service.judge.llm.model == "gpt-6-sol"
+    assert service.judge.llm.timeout_seconds == 360
     assert service.clarity_judge.llm.model == "gpt-6-sol"
     assert service.judge.localizer.model == "gpt-6-luna"
     assert service.clarity_judge.localizer.model == "gpt-6-luna"
