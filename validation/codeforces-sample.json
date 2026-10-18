@@ -1,0 +1,245 @@
+{
+  "checked_at_utc": "2026-10-18T08:21:43.212658+00:00",
+  "verified_count": 10,
+  "attempted_count": 20,
+  "criteria": "live CF statement + official editorial + complete code + C++ syntax check when applicable",
+  "verified": [
+    {
+      "id": "1234A",
+      "title": "Equalize Prices Again",
+      "rating": 800,
+      "tags": [
+        "math"
+      ],
+      "problem_url": "https://codeforces.com/problemset/problem/1234/A",
+      "editorial_url": "https://codeforces.com/blog/entry/70233",
+      "source_url": null,
+      "source_method": "editorial_embedded",
+      "statement_chars": 1793,
+      "source_chars": 370,
+      "statement_sha256": "9deafe345a46b7dea86887a531c94489f80ff09ea1eae345ccb6474820025f0b",
+      "source_sha256": "8a8abd940c05cf3b27a6463bc13deb563d4bf059826735c46b47bf12e9f11906",
+      "syntax_check": "g++ -std=gnu++20 -fsyntax-only passed"
+    },
+    {
+      "id": "1990A",
+      "title": "Submission Bait",
+      "rating": 900,
+      "tags": [
+        "brute force",
+        "games",
+        "greedy",
+        "sortings"
+      ],
+      "problem_url": "https://codeforces.com/problemset/problem/1990/A",
+      "editorial_url": "https://codeforces.com/blog/entry/131716",
+      "source_url": null,
+      "source_method": "editorial_embedded",
+      "statement_chars": 1616,
+      "source_chars": 937,
+      "statement_sha256": "6f600c001b5f22c3a7c307c3eaa5995883c60e7662ec1102afe0b354e4ae0fee",
+      "source_sha256": "b1b6bb3633975a2db2d17e9bd62510c9be4dd41a8e01b3fc0d22f068c71e5dd8",
+      "syntax_check": "g++ -std=gnu++20 -fsyntax-only passed"
+    },
+    {
+      "id": "2032A",
+      "title": "Circuit",
+      "rating": 800,
+      "tags": [
+        "greedy",
+        "implementation",
+        "math",
+        "number theory"
+      ],
+      "problem_url": "https://codeforces.com/problemset/problem/2032/A",
+      "editorial_url": "https://codeforces.com/blog/entry/135622",
+      "source_url": null,
+      "source_method": "editorial_template_composed",
+      "statement_chars": 3086,
+      "source_chars": 802,
+      "statement_sha256": "9fe107e79c74279310eddb28256125c17ed1e5441f8aadd438f772f2f503ff85",
+      "source_sha256": "e6ca5fa624648ff951ad1d82e1ac446a55cfc431e053bd192b7bd6b4443f113b",
+      "syntax_check": "g++ -std=gnu++20 -fsyntax-only passed"
+    },
+    {
+      "id": "1927C",
+      "title": "Choose the Different Ones!",
+      "rating": 1000,
+      "tags": [
+        "brute force",
+        "greedy",
+        "math"
+      ],
+      "problem_url": "https://codeforces.com/problemset/problem/1927/C",
+      "editorial_url": "https://codeforces.com/blog/entry/125597",
+      "source_url": null,
+      "source_method": "editorial_embedded",
+      "statement_chars": 3161,
+      "source_chars": 493,
+      "statement_sha256": "cfc2ac4bbdf78f7a3d7b1028c3628f97625fb28780837a1a55aca197e04dc45e",
+      "source_sha256": "25cae46148221f00b7a1122f60345da3f8bbbf2b4b382d0648762a952dedc47b",
+      "syntax_check": "Python ast.parse passed"
+    },
+    {
+      "id": "1907C",
+      "title": "Removal of Unattractive Pairs",
+      "rating": 1200,
+      "tags": [
+        "constructive algorithms",
+        "greedy",
+        "math",
+        "strings"
+      ],
+      "problem_url": "https://codeforces.com/problemset/problem/1907/C",
+      "editorial_url": "https://codeforces.com/blog/entry/123012",
+      "source_url": null,
+      "source_method": "editorial_embedded",
+      "statement_chars": 1581,
+      "source_chars": 219,
+      "statement_sha256": "9b28023e1171e2cbc8c571d5ef29e96252a9217d00c5547c1b881868540ecd11",
+      "source_sha256": "d19ad517cbdbf9737303062c815d3d88513926b34b50b9b698cde9a0cd51678d",
+      "syntax_check": "Python ast.parse passed"
+    },
+    {
+      "id": "1901C",
+      "title": "Add, Divide and Floor",
+      "rating": 1400,
+      "tags": [
+        "constructive algorithms",
+        "greedy",
+        "math"
+      ],
+      "problem_url": "https://codeforces.com/problemset/problem/1901/C",
+      "editorial_url": "https://codeforces.com/blog/entry/122645",
+      "source_url": null,
+      "source_method": "editorial_embedded",
+      "statement_chars": 2368,
+      "source_chars": 252,
+      "statement_sha256": "3e07ad498425a84e752b40267cd8a519c24e878c7a7812f2bdccf88670ea7532",
+      "source_sha256": "cc3b5ba4cf434f8ac751905628079c74de40befc952e3350e257c13b6c8aec65",
+      "syntax_check": "Python ast.parse passed"
+    },
+    {
+      "id": "1920C",
+      "title": "Partitioning the Array",
+      "rating": 1600,
+      "tags": [
+        "brute force",
+        "math",
+        "number theory"
+      ],
+      "problem_url": "https://codeforces.com/problemset/problem/1920/C",
+      "editorial_url": "https://codeforces.com/blog/entry/122560",
+      "source_url": null,
+      "source_method": "editorial_embedded",
+      "statement_chars": 1851,
+      "source_chars": 535,
+      "statement_sha256": "a58555142a7db22af8bd41bd554a2e2e5f052f785e4a766db6a09fba504033bc",
+      "source_sha256": "8e471a0f98e42388050db6924dba8f8c731b3eff5af91cbca7ecf202e94f8548",
+      "syntax_check": "g++ -std=gnu++20 -fsyntax-only passed"
+    },
+    {
+      "id": "1922E",
+      "title": "Increasing Subsequences",
+      "rating": 1800,
+      "tags": [
+        "bitmasks",
+        "constructive algorithms",
+        "divide and conquer",
+        "greedy",
+        "math"
+      ],
+      "problem_url": "https://codeforces.com/problemset/problem/1922/E",
+      "editorial_url": "https://codeforces.com/blog/entry/124890",
+      "source_url": null,
+      "source_method": "editorial_embedded",
+      "statement_chars": 1563,
+      "source_chars": 549,
+      "statement_sha256": "9ab88a9b7700299240a2511303967355f806ae277d3acbc598bfca49e2169c3d",
+      "source_sha256": "79e0d3427f7d475bfa84ed7a1c0c5494ad9803850cfd4268f2330637768c3b71",
+      "syntax_check": "g++ -std=gnu++20 -fsyntax-only passed"
+    },
+    {
+      "id": "1862G",
+      "title": "The Great Equalizer",
+      "rating": 2000,
+      "tags": [
+        "binary search",
+        "data structures",
+        "math",
+        "sortings"
+      ],
+      "problem_url": "https://codeforces.com/problemset/problem/1862/G",
+      "editorial_url": "https://codeforces.com/blog/entry/119715",
+      "source_url": null,
+      "source_method": "editorial_embedded",
+      "statement_chars": 3364,
+      "source_chars": 2096,
+      "statement_sha256": "10277bc570761c86603edf1b03408e8ddb6f51da86c1268eaa37b67982b22d0c",
+      "source_sha256": "c8e0aad4dbabad3fc2d2d093c0f5e4c7cd775b53576d433961885b1bef05efab",
+      "syntax_check": "g++ -std=gnu++20 -fsyntax-only passed"
+    },
+    {
+      "id": "1946E",
+      "title": "Girl Permutation",
+      "rating": 2200,
+      "tags": [
+        "combinatorics",
+        "dp",
+        "math",
+        "number theory"
+      ],
+      "problem_url": "https://codeforces.com/problemset/problem/1946/E",
+      "editorial_url": "https://codeforces.com/blog/entry/127439",
+      "source_url": null,
+      "source_method": "editorial_embedded",
+      "statement_chars": 2407,
+      "source_chars": 4317,
+      "statement_sha256": "0e0d3a698ffb1f48f949510c4b17b0e07c62775af6488784d14b8760e5a23b0b",
+      "source_sha256": "a3fc4d047d56341839aab44819a3caf1308443bcf49c53620cdff660f30157f8",
+      "syntax_check": "g++ -std=gnu++20 -fsyntax-only passed"
+    }
+  ],
+  "failures": [
+    {
+      "id": "1916B",
+      "reason": "Official editorial 124138 has no verifiable complete solution for 1916B"
+    },
+    {
+      "id": "1883C",
+      "reason": "Official editorial 121621 has no identifiable section for 1883C"
+    },
+    {
+      "id": "1917C",
+      "reason": "Editorial-linked source unavailable: Client error '403 Forbidden' for url 'https://codeforces.com/contest/1917/submission/238743155?locale=en&mobile=true'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403"
+    },
+    {
+      "id": "1900D",
+      "reason": "Official editorial 122677 has no verifiable complete solution for 1900D"
+    },
+    {
+      "id": "1905D",
+      "reason": "Official editorial 123384 has no verifiable complete solution for 1905D"
+    },
+    {
+      "id": "1872G",
+      "reason": "Editorial-linked source unavailable: Client error '403 Forbidden' for url 'https://codeforces.com/contest/1872/submission/222437122?locale=en&mobile=true'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403"
+    },
+    {
+      "id": "1931G",
+      "reason": "Problem statement contains an image without text description: https://codeforces.com/problemset/problem/1931/G"
+    },
+    {
+      "id": "1936B",
+      "reason": "Problem statement contains an image without text description: https://codeforces.com/problemset/problem/1936/B"
+    },
+    {
+      "id": "1909F1",
+      "reason": "Official editorial 123584 has no verifiable complete solution for 1909F1"
+    },
+    {
+      "id": "1912E",
+      "reason": "No official tutorial link on the problem page"
+    }
+  ]
+}

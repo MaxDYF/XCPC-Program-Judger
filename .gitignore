@@ -1,0 +1,43 @@
+# Local environments and generated Python artifacts
+.venv/
+venv/
+__pycache__/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+
+# Secrets and machine-specific configuration
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+credentials.json
+secrets.json
+
+# Private submissions, corpora, reports, and persistent state
+/data/
+/uploads/
+/reports/
+/references/
+/manifests/
+*.pdf
+*.sqlite
+*.sqlite-*
+*.sqlite3
+*.sqlite3-*
+*.db
+*.db-*
+*.log
+
+# Local editor and OS files
+.DS_Store
+.idea/
+.vscode/
+*.swp

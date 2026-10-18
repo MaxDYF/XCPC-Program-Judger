@@ -1,0 +1,62 @@
+{
+  "target_problem": "2032A",
+  "target_official_rating": 800,
+  "estimated_cf_rating": 800,
+  "statement_clarity_score": 8.9,
+  "statement_clarity_passed": true,
+  "statement_clarity_criteria": [
+    {
+      "key": "objective_io",
+      "score": 9,
+      "max_score": 10,
+      "weight": 0.45
+    },
+    {
+      "key": "language",
+      "score": 8,
+      "max_score": 10,
+      "weight": 0.2
+    },
+    {
+      "key": "information_focus",
+      "score": 8,
+      "max_score": 10,
+      "weight": 0.15
+    },
+    {
+      "key": "background_independence",
+      "score": 10,
+      "max_score": 10,
+      "weight": 0.2
+    }
+  ],
+  "ranking_rounds": 1,
+  "target_rank": 1,
+  "reference_count": 10,
+  "reference_ids": [
+    "1901A",
+    "1903B",
+    "1907C",
+    "1901C",
+    "1903C",
+    "1904D1",
+    "1904D2",
+    "1901E",
+    "1902F",
+    "1896F"
+  ],
+  "reference_ratings": [
+    800,
+    1200,
+    1200,
+    1400,
+    1400,
+    1600,
+    1800,
+    2200,
+    2400,
+    2600
+  ],
+  "anchor_inversion_rate": 0.116,
+  "note": "Single-round live integration smoke test, not an accuracy benchmark."
+}

@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#071a31">
+  <title>评测历史 · XCPC题目评分器</title>
+  <link rel="stylesheet" href="/static/styles.css">
+  <link rel="stylesheet" href="/static/history.css">
+  <script src="/static/history.js" defer></script>
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <a class="brand" href="/" aria-label="XCPC题目评分器首页"><span class="brand-mark">X</span><span><strong>XCPC题目评分器</strong><small>XCPC-ProblemJudger</small></span></a>
+      <div class="side-section-label">评测工作台</div>
+      <nav aria-label="主导航">
+        <a class="nav-link" href="/"><span>＋</span> 提交题目</a>
+        <a class="nav-link active" href="/history" aria-current="page"><span>▤</span> 任务与历史 <small id="sidebar-live-count" class="nav-count hidden"></small></a>
+      </nav>
+      <div class="side-section-label side-section-secondary">了解评分</div>
+      <nav aria-label="说明导航"><a class="nav-link" href="/#method"><span>◎</span> 评估方法</a></nav>
+      <div class="sidebar-bottom">
+        <div class="side-note"><span class="live-dot"></span><strong>公开评测记录</strong><p>进行中的任务显示实时状态；完成后保存评分报告，不保存上传文件。</p></div>
+        <div class="side-footer">XCPC题目评分器<br>分数仅供出题难度参考</div>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <header class="topbar"><span class="breadcrumb">工作台 <span>/</span> <a href="/history">评测历史</a></span><span class="topbar-status"><span class="live-dot"></span> 本地服务</span></header>
+      <div class="page-content history-content">
+        <section id="history-list-view">
+          <div class="history-hero"><div class="eyebrow"><span class="eyebrow-line"></span> EVALUATION ARCHIVE</div><h1>评测进度与结果，<br><em>集中查看。</em></h1><p>进行中的任务实时更新，完成后可查看详细评分报告。上传的题面 PDF 与 std 源码不会保存在历史库中。</p><span id="history-total" class="history-total">正在读取记录…</span></div>
+          <div class="history-section-heading"><div><div class="section-kicker">LIVE QUEUE</div><h2>正在评测 <span id="live-total" class="count-pill">0</span></h2></div><span class="history-refresh-note">自动更新 · 每 4 秒</span></div>
+          <div id="live-list" class="history-list" aria-live="polite"></div>
+          <div id="live-empty" class="history-empty">当前没有正在评测的任务。</div>
+          <div class="history-section-heading"><div><div class="section-kicker">ALL EVALUATIONS</div><h2>已完成评测</h2></div><a class="secondary-button" href="/">评测新题目 ↗</a></div>
+          <div id="history-error" class="history-message hidden" role="alert"></div>
+          <div id="history-list" class="history-list" aria-live="polite"></div>
+          <button id="history-more" class="history-more hidden" type="button">加载更多记录 ↓</button>
+        </section>
+
+        <section id="history-detail-view" class="hidden">
+          <a class="history-back" href="/history">← 返回历史记录</a>
+          <div class="history-detail-head"><div><div class="section-kicker">EVALUATION REPORT</div><h1 id="detail-title">评测详情</h1><p id="detail-date"></p></div><button id="detail-download" class="secondary-button" type="button">下载 JSON 报告 ↓</button></div>
+          <div id="detail-error" class="history-message hidden" role="alert"></div>
+          <div id="live-detail" class="card history-card history-live-detail hidden"><div class="section-kicker">LIVE EVALUATION</div><h2 id="live-detail-title">正在评测</h2><p id="live-detail-date"></p><div class="progress-track"><span id="live-detail-fill"></span></div><p id="live-detail-phase"></p><p class="history-refresh-note">页面会自动更新。刷新后仍可通过历史页查看此任务。</p></div>
+          <div id="detail-content" class="hidden">
+            <div class="history-metrics"><article class="history-metric primary"><span>估计 Codeforces 难度</span><strong id="detail-rating">—</strong><small>rating · 按参考题梯度校准</small></article><article class="history-metric"><span>题面清晰度</span><strong id="detail-clarity">—</strong><small id="detail-verdict">—</small></article><article class="history-metric"><span>参考题数量</span><strong id="detail-references">—</strong><small id="detail-stability">—</small></article></div>
+            <div class="history-detail-grid"><article class="card history-card"><div class="section-kicker">PROBLEM ANALYSIS</div><h2>题目与解法分析</h2><h3 id="detail-algorithm"></h3><p id="detail-summary"></p><div class="history-subtitle">复杂度</div><p id="detail-complexity"></p><div class="history-subtitle">推断标签</div><div id="detail-tags" class="tags"></div></article><article class="card history-card"><div class="section-kicker">STATEMENT CLARITY</div><h2>题意理解</h2><p id="detail-clarity-summary"></p><div id="detail-criteria" class="history-criteria"></div></article></div>
+            <article class="card history-card history-wide"><div class="section-kicker">BACKGROUND-FREE MEANING</div><h2>去掉背景后的题意</h2><p id="detail-neutral" class="history-prewrap"></p><div id="detail-issues-wrap" class="hidden"><div class="history-subtitle">需要注意</div><ul id="detail-issues"></ul></div></article>
+            <article class="card history-card history-wide"><div class="history-card-top"><div><div class="section-kicker">DIFFICULTY LADDER</div><h2>参考题难度梯度</h2></div><span id="detail-rank" class="count-pill"></span></div><ol id="detail-ranking" class="history-ranking"></ol><p id="detail-judge-reason" class="history-note"></p><p id="detail-calibration" class="history-note"></p></article>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+</body>
+</html>

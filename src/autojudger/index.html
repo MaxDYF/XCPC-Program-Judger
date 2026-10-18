@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#071a31">
+  <title>XCPC题目评分器 · XCPC-ProblemJudger</title>
+  <link rel="stylesheet" href="/static/styles.css">
+  <script src="/static/app.js" defer></script>
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <a class="brand" href="/" aria-label="XCPC题目评分器首页"><span class="brand-mark">X</span><span><strong>XCPC题目评分器</strong><small>XCPC-ProblemJudger</small></span></a>
+      <div class="side-section-label">评测工作台</div>
+      <nav aria-label="主导航">
+        <a class="nav-link active" href="#workspace"><span>＋</span> 提交题目</a>
+        <a class="nav-link" href="/history"><span>▤</span> 任务与历史 <small id="sidebar-live-count" class="nav-count hidden"></small></a>
+      </nav>
+      <div class="side-section-label side-section-secondary">了解评分</div>
+      <nav aria-label="说明导航"><a class="nav-link" href="#method"><span>◎</span> 评估方法</a></nav>
+      <div class="sidebar-bottom">
+        <div class="side-note"><span class="live-dot"></span><strong>任务持续运行</strong><p>刷新页面不会取消评测。可在“任务与历史”中查看进行中的任务。</p></div>
+        <div class="side-footer">XCPC题目评分器<br>分数仅供出题难度参考</div>
+      </div>
+    </aside>
+
+    <main id="workspace" class="main-content">
+      <header class="topbar"><span class="breadcrumb">工作台 <span>/</span> 难度标定</span><span class="topbar-status"><span class="live-dot"></span> 本地服务</span></header>
+      <div class="page-content">
+        <section class="hero">
+          <div class="eyebrow"><span class="eyebrow-line"></span> ICPC PROBLEM CALIBRATION</div>
+          <h1>让题目的难度，<br><em>有据可依。</em></h1>
+          <p class="hero-copy">上传题面与标准程序。系统先评估选手能否读懂题意，再寻找同类 Codeforces 题目，由独立 agent 进行匿名难度排序。</p>
+          <div class="hero-chips"><span>5 分题面清晰度</span><span>5–20 道参考题</span><span>多轮盲排校准</span></div>
+          <div class="hero-grid" aria-hidden="true"></div>
+        </section>
+
+        <div class="content-grid">
+          <section class="card upload-card" aria-labelledby="upload-title">
+            <div class="section-heading"><div><div class="section-kicker">01 / INPUT</div><h2 id="upload-title">提交待评估题目</h2><p>题面最多 10 页且需要可提取文本；同一 IP 每 10 分钟最多提交 5 次。std 文件使用 UTF-8 编码。</p></div><span class="section-icon">↗</span></div>
+            <form id="evaluation-form">
+              <div class="upload-grid">
+                <label class="dropzone" id="pdf-zone" for="statement_pdf">
+                  <input id="statement_pdf" name="statement_pdf" type="file" accept=".pdf,application/pdf" required>
+                  <span class="drop-icon">▤</span><strong>题面 PDF</strong><span class="drop-hint">拖入文件，或点击选择</span><span class="file-name" id="pdf-name">仅支持 PDF · 最多 10 页 · 最大 20 MB</span>
+                </label>
+                <label class="dropzone" id="std-zone" for="std_file">
+                  <input id="std_file" name="std_file" type="file" accept=".cpp,.cc,.c,.py,.java,.rs,.txt" required>
+                  <span class="drop-icon">{ }</span><strong>标准程序</strong><span class="drop-hint">拖入文件，或点击选择</span><span class="file-name" id="std-name">源码文件 · 最大 1 MB</span>
+                </label>
+              </div>
+              <div class="reference-control"><div><label for="reference_count">参考题数量</label><p>选择 5–20 道参考题；匹配的 Codeforces rating 不设难度上限。</p></div><div class="range-wrap"><input id="reference_count" name="reference_count" type="range" min="5" max="20" value="12"><output id="reference-output" for="reference_count">12 道</output></div></div>
+              <div class="form-footer"><span><strong>题面清晰度 / 5</strong> + <strong>估计 CF rating</strong> · 两项独立</span><button id="submit-button" type="submit">开始评估 <span>→</span></button></div>
+            </form>
+          </section>
+
+          <aside id="method" class="method-column">
+            <section class="card method-card"><div class="section-kicker">02 / METHOD</div><h2>一次提交，两项评估</h2><ol class="steps"><li><span class="step-index">01</span><div><strong>去背景理解</strong><p>只读题面，还原不依赖故事背景的任务含义。</p></div></li><li><span class="step-index">02</span><div><strong>题面清晰度</strong><p>只看原题面是否让竞赛选手看懂任务，四项各评 0–5 整数分后加权。</p></div></li><li><span class="step-index">03</span><div><strong>建立难度参照</strong><p>分析算法与标签，读取 Codeforces 题面和官方题解。</p></div></li><li><span class="step-index">04</span><div><strong>多轮盲排</strong><p>隐藏元数据，排序并按 CF rating 梯度校准。</p></div></li></ol></section>
+            <section class="info-card"><span class="info-icon">ℹ</span><div><strong>两项分数独立</strong><p>清晰度满分 5 分，3 分起为 weak accept；难度分为估计 CF rating。两者不合并，且都不能证明 std 正确。</p></div></section>
+          </aside>
+        </div>
+
+        <section id="progress-panel" class="card progress-panel hidden" aria-live="polite"><div class="section-kicker">03 / IN PROGRESS</div><div class="progress-heading"><div><h2>正在评估题目</h2><p id="progress-detail">任务已创建，等待处理。</p></div><span class="spinner" aria-hidden="true"></span></div><div class="progress-track"><span id="progress-fill"></span></div><div class="progress-stages"><span data-phase="analyzing">分析题目</span><span data-phase="clarity">题意清晰度</span><span data-phase="searching">检索相似题</span><span data-phase="collecting">读取官方题解</span><span data-phase="ranking">匿名排序</span></div></section>
+
+        <section id="error-panel" class="error-panel hidden" role="alert"><span>!</span><div><strong>本次评估未完成</strong><p id="error-text"></p></div><button id="retry-button" type="button">重新提交</button></section>
+
+        <section id="result-panel" class="results hidden" aria-labelledby="result-title">
+          <div class="result-header"><div><div class="section-kicker">03 / RESULT</div><h2 id="result-title">题目评估报告</h2><p>题面清晰度与 Codeforces 难度分别评分，共用同一次评估流程。</p></div><div class="result-actions"><a id="history-detail-link" class="secondary-button hidden" href="/history">查看历史详情 ↗</a><button id="download-button" class="secondary-button" type="button">下载 JSON 报告 ↓</button></div></div>
+          <div class="result-summary"><div class="score-card"><span>估计 Codeforces 难度分</span><div class="score-value"><strong id="score-value">—</strong><small>rating</small></div><div class="score-meter"><span id="score-meter-fill"></span></div><p id="rank-description"></p><p id="rating-neighbors"></p><div id="stability-badge" class="stability-badge"></div></div><div class="analysis-card"><span>解法分析</span><h3 id="algorithm-value">—</h3><p id="summary-value"></p><div class="analysis-meta"><div><small>时间复杂度</small><strong id="complexity-value">—</strong></div><div><small>推断标签</small><div id="tag-list" class="tags"></div></div></div></div></div>
+          <section class="card clarity-panel" aria-labelledby="clarity-title"><div class="clarity-heading"><div><div class="section-kicker">STATEMENT CLARITY</div><h3 id="clarity-title">题面理解清晰度</h3><p>以一般 ICPC / CCPC 选手的竞赛常识为界；题面讲清楚的陌生概念不会单独扣分。</p></div><span id="clarity-method" class="clarity-method">四项 5 分制 · 整数档位</span></div><div class="clarity-layout"><div class="clarity-score-card"><div class="clarity-ring" id="clarity-ring"><div><strong id="clarity-score">—</strong><small id="clarity-max-label">/ 5</small></div></div><span id="clarity-status" class="clarity-status">—</span><p id="clarity-summary"></p><div class="clarity-pass-line">接受档位 <strong id="clarity-passing-score">3</strong> / <span id="clarity-pass-max">5</span> · 加权原始分 <strong id="clarity-weighted-score">—</strong></div></div><div class="clarity-breakdown"><div id="clarity-criteria" class="clarity-criteria"></div><div class="neutral-meaning"><span>去掉背景后的题目含义</span><p id="neutral-statement"></p></div><div id="clarity-issues" class="clarity-issues hidden"><strong>建议检查</strong><ul id="clarity-issues-list"></ul></div></div></div></section>
+          <div class="card ranking-card"><div class="ranking-top"><div><div class="section-kicker">DIFFICULTY LADDER</div><h3>参考题排序</h3></div><span id="ranking-count" class="count-pill"></span></div><ol id="ranking-list" class="ranking-list"></ol><p class="judge-reason"><strong>模型判断</strong><span id="judge-reason-text"></span></p><p class="calibration-note" id="calibration-note"></p></div>
+        </section>
+      </div>
+    </main>
+  </div>
+</body>
+</html>
