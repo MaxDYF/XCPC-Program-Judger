@@ -1,73 +1,143 @@
+<div align="center">
+
 # XCPC-ProblemJudger
 
-**XCPC题目评分器** evaluates statement clarity and estimates Codeforces difficulty for ICPC/CCPC style problems.
+**Statement clarity review and Codeforces difficulty estimation for ICPC/CCPC-style problems**
 
-[English](README.md) · [中文文档](docs/README-CN.md) · [Method](#method) · [Validation](#validation) · [MIT License](LICENSE)
+[![Python 3.11+](https://img.shields.io/badge/Python-3.11%2B-3776AB?logo=python&logoColor=white)](pyproject.toml)
+[![CI](https://github.com/MaxDYF/XCPC-Program-Judger/actions/workflows/ci.yml/badge.svg)](https://github.com/MaxDYF/XCPC-Program-Judger/actions/workflows/ci.yml)
+[![MIT License](https://img.shields.io/badge/License-MIT-2da891)](LICENSE)
 
-## Abstract
+[简体中文](docs/README-CN.md) · [Quick Start](#-quick-start) · [How It Works](#-how-it-works) · [Validation](#-validation)
 
-Submit a complete problem statement PDF and reference solution (`std`) source file. The pipeline returns an integer 0–5 clarity grade and an estimated Codeforces rating. It retrieves 5–20 similarly tagged references across a rating gradient, reads their statements and author editorials, and ranks anonymous problem and source pairs. Reports and a history page are available in the web UI. Analysis is written in Chinese; source quotations may retain their language.
+</div>
 
-The rating is an estimate, not an official Codeforces rating or a correctness proof for the uploaded solution.
+---
 
-## Method
+## 📢 Project Status
 
-1. **Analysis:** An agent summarizes the task, `std` algorithm and complexity, and likely Codeforces tags.
-2. **Clarity:** An interpretation agent reads only the statement and restates the task without assumed cultural background. A separate judge receives the statement and interpretation, never the solution or editorial. It rates task/input/output (20%), language (35%), information density (10%), and background independence (35%), each as an integer 0–5. The rounded weighted grade maps 0–5 to strong reject, reject, weak reject, weak accept, accept, and strong accept; 3 is the acceptance threshold. It evaluates whether a contestant understands what to do, not how to solve it.
-3. **References:** Codeforces metadata supplies tags and ratings. The service samples a gradient, excludes the submitted problem itself, and retrieves statements and author editorials. Deterministic extraction reads complete editorial programs; an extraction agent handles unusual layouts only when needed. Its output must match source text or an allowed source link. Incomplete references are skipped. Up to four candidates are fetched concurrently.
-4. **Blind ranking:** The independent ranking agent receives anonymous statements and programs without IDs, tags, ratings, URLs, retrieval notes, or clarity scores. It has no web tool. The default is three independent rounds.
-5. **Calibration:** Pairwise votes against references are fitted to the rating gradient with a minimum-conflict insertion and monotonic regression. The neighboring reference ratings yield a Codeforces rating estimate rounded to a 100-point band. Reports disclose raw ranks, inversions, equally optimal insertion positions, and edge extrapolation. A 0–100 gradient position is supplementary, not the difficulty score.
+The web app, command-line interface, asynchronous job tracking, and persistent report history are available. A completed report contains two separate results: a **0–5 statement clarity grade** and an **estimated Codeforces rating**. The rating is an estimate derived from reference problems; it is neither an official Codeforces rating nor a proof that the submitted solution is correct.
 
-Codeforces ratings are empirical; individual reference difficulty can disagree with rating order. Blind input isolation cannot erase model prior knowledge or identifying clues inside statements and code. The report exposes disagreement rather than implying perfect order.
+## 🌟 Highlights
 
-## Installation
+- **Two independent assessments.** Clarity evaluates whether a contestant understands the task; difficulty estimates a Codeforces rating. The scores are never combined.
+- **Reference-based calibration.** Select 5–20 similarly tagged Codeforces problems across a rating gradient. The submitted problem is excluded if it appears among the references.
+- **Author-editorial retrieval.** The service reads each reference statement and linked author editorial, verifies a complete program, and skips unusable references. Unusual editorial formats can be handled by a dedicated extraction agent.
+- **Blind multi-round ranking.** The ranking agent receives anonymous statements and programs without tags, ratings, IDs, URLs, or retrieval notes. Conflicting rankings are reconciled against the reference gradient and reported.
+- **Live web workflow.** Refreshing a submission tab restores its job progress. The history page shows running jobs and completed reports. Reports are written in Chinese; source quotations can retain their original language.
 
-Python 3.11 or newer is required.
+---
+
+## 🎬 Overview
+
+Upload a complete statement PDF and a reference solution source file. The service analyzes the problem, reviews the statement on its own, retrieves Codeforces references, ranks anonymous problem–solution pairs, and calibrates the submitted problem against known ratings.
+
+```mermaid
+flowchart LR
+    A["Statement PDF + std source"] --> B["Problem analysis"]
+    A --> C["Statement-only clarity review"]
+    B --> D["Codeforces reference retrieval"]
+    D --> E["Blind ranking"]
+    A --> E
+    E --> F["Rating calibration"]
+    C --> G["Report"]
+    F --> G
+```
+
+The clarity path does not receive the uploaded solution or an editorial. The blind ranking path does not receive reference IDs, ratings, tags, or the clarity result.
+
+---
+
+## 🚀 Quick Start
+
+### Environment
+
+Python 3.11 or newer is required. The configured model endpoint must support Chat Completions JSON responses and enough context for complete reference material.
 
 ```bash
+git clone https://github.com/MaxDYF/XCPC-Program-Judger.git
+cd XCPC-Program-Judger
 python -m venv .venv
 .venv/bin/pip install -e '.[test]'
 export OPENAI_API_KEY='replace-with-your-own-key'
 export OPENAI_BASE_URL='https://your-compatible-endpoint.example/v1'
 ```
 
-`OPENAI_API_KEY` is read from the process environment and held in memory for calls to the configured Chat Completions endpoint. Do not commit a filled environment file. Analysis, interpretation, extraction, and formatting default to `gpt-6-luna`; blind ranking (`JUDGE_MODEL`) and clarity grading (`CLARITY_MODEL`) default to `gpt-6-sol`. `OPENAI_MODEL`, `ANALYST_MODEL`, `INTERPRETER_MODEL`, `EXTRACTOR_MODEL`, and `FORMAT_MODEL` override individual roles. The endpoint needs JSON mode and enough context for complete references. Uploaded statements and solutions are not silently truncated.
+The API key is read from the process environment and held in memory for requests to the configured model endpoint. Keep filled environment files outside the repository. Analysis, interpretation, extraction, and formatting default to `gpt-6-luna`; blind ranking (`JUDGE_MODEL`) and clarity grading (`CLARITY_MODEL`) default to `gpt-6-sol`. Individual roles can be configured with `OPENAI_MODEL`, `ANALYST_MODEL`, `INTERPRETER_MODEL`, `EXTRACTOR_MODEL`, and `FORMAT_MODEL`.
 
-### CLI
+### Web App
+
+```bash
+deploy/run-sandbox.sh
+# Open http://127.0.0.1:8765/
+```
+
+The Bubblewrap launcher exposes a read-only runtime and source tree, a private temporary directory, and write access to `data/` for SQLite history. It shares the host network. For a Cloudflare Tunnel deployment, keep the service bound to `127.0.0.1` and set `AUTOJUDGER_PUBLIC_HOST` to the exact public hostname. The default Host allowlist accepts loopback names only. A container alternative is provided in [Dockerfile](Dockerfile).
+
+### Command Line
 
 ```bash
 .venv/bin/xcpc-problemjudger problem.pdf std.cpp --references 12 --output report.json
 ```
 
-### Web app and HTTP API
+### HTTP API
 
 ```bash
-deploy/run-sandbox.sh
-# Open http://127.0.0.1:8765/
 curl -H 'X-XCPC-ProblemJudger-Request: 1' \
-  -F statement_pdf=@problem.pdf -F std_file=@std.cpp -F reference_count=12 \
+  -F statement_pdf=@problem.pdf \
+  -F std_file=@std.cpp \
+  -F reference_count=12 \
   http://127.0.0.1:8765/evaluate
 ```
 
-The UI uses `POST /jobs` and polls `GET /jobs/{job_id}`. Its task ID is kept in browser session storage, so refreshing that tab resumes the progress view; the server keeps evaluating even if the tab closes. `GET /api/jobs` lists queued and running tasks with progress metadata, and the history page refreshes this list every four seconds. In-progress detail pages show the current phase. `POST /evaluate` is the synchronous JSON endpoint. `GET /api/history` and `GET /api/history/{id}` show completed reports. `AUTOJUDGER_HISTORY_DB` selects a private SQLite path; the default is `data/history.sqlite3`. The database stores reports, not uploaded PDF or `std` files. **Completed reports and live task states are publicly readable**, so operators must treat them as public. In-progress tasks are held only in server memory; restarting the process interrupts them and clears their status.
+The web UI submits through `POST /jobs` and polls `GET /jobs/{job_id}`. `GET /api/jobs` lists queued and running jobs. `POST /evaluate` is a synchronous JSON endpoint. `GET /api/history` and `GET /api/history/{id}` return completed reports. The browser stores the active task ID in session storage, so refreshing the same tab resumes its progress view. Jobs continue on the server after a tab closes, but a server restart interrupts in-progress jobs.
 
-Public access needs no login. PDFs are limited to 10 pages and 20 MiB, source files to 1 MiB. One source IP may submit five PDFs per sliding ten-minute window across both submission endpoints. Every write needs `X-XCPC-ProblemJudger-Request: 1` and passes a same-origin check. Temporary jobs are bounded in number and lifetime. Rate counters live in one process; multi-instance deployments need shared or edge-side limiting.
+---
 
-## Deployment and privacy
+## 🧠 How It Works
 
-Bind to `127.0.0.1` and point a Cloudflare Tunnel hostname to that loopback address. Set `AUTOJUDGER_PUBLIC_HOST=judge.example.org` to the exact hostname for your deployment; the default Host allowlist accepts loopback names only. `deploy/run-sandbox.sh` uses Bubblewrap to expose a read-only runtime and source tree, a private `/tmp`, and only `data/` as writable. It shares the host network. The [Chinese deployment notes](docs/README-CN.md#cloudflare-tunnel-公网发布与隔离) include a read-only Docker invocation.
+### Statement Clarity
 
-The configured model endpoint receives uploaded statements and sources as required for evaluation. Review its data policy before processing confidential problems. Codeforces and allowed source links receive ordinary retrieval requests.
+An interpretation agent reads only the uploaded statement and restates the task without outside cultural context. A clarity judge then grades four criteria as integers from 0 to 5:
 
-The repository excludes environment files, private keys, uploads, `data/`, reports, manifests, PDFs, and SQLite databases including journal files. `scripts/check_release.py` scans the **actual Git index** before publishing; `.gitignore` alone cannot protect a force-added file. Audit previous commits before publishing an existing repository history.
+| Criterion | Weight |
+| --- | ---: |
+| Task and input/output | 20% |
+| Language | 35% |
+| Information density | 10% |
+| Background independence | 35% |
 
-## Reference provenance
+The weighted result is rounded to an integer grade. Grades 0 through 5 correspond to **strong reject**, **reject**, **weak reject**, **weak accept**, **accept**, and **strong accept**; grade 3 is the acceptance threshold. The rubric asks whether an ICPC/CCPC contestant can understand *what the task requires*. It does not grade the ease or clarity of the solution.
 
-Live mode uses Codeforces `problemset.problems`, problem pages, linked author Tutorials, and `blogEntry.view`. Editorials may have full code, per-problem sections, submission links, snippets, or shared templates. The extractor verifies literal code or source links and skips incomplete programs. Retrieved editorial programs are not formal platform-provided `std` files. Site restrictions and layout changes can reduce coverage.
+### Difficulty Calibration
 
-`REFERENCE_MANIFEST` may point to an operator-reviewed JSON corpus **outside** the repository. Each entry needs `contestId`, `index`, `name`, `rating`, `tags`, `statement`, `source`, and `editorialUrl`. Redistribute third-party text and code only with appropriate rights. The service refuses difficulty estimates when rating coverage and density requirements are unmet.
+1. Analyze the uploaded statement and `std` source to infer tags, algorithm, and complexity.
+2. Retrieve 5–20 similarly tagged Codeforces references across available ratings. Read their statements and linked author editorials. Up to four candidate problems are fetched concurrently.
+3. Verify complete reference programs. A fallback extraction agent may locate code in unusual layouts, but the result must match source text or an allowed source link. Skip incomplete references.
+4. Ask an independent agent to rank anonymous statement–program pairs in three rounds by default, without web tools or metadata.
+5. Fit pairwise votes to the reference rating gradient using a minimum-conflict insertion and monotonic regression. Use neighboring reference ratings to estimate the submitted problem's rating, rounded to a 100-point band.
 
-## Validation
+The report exposes raw ranks, inversions against the reference gradient, equally optimal insertion positions, and extrapolation at a gradient edge. A 0–100 gradient position is supplementary; the **difficulty score is the estimated Codeforces rating**. Individual Codeforces ratings are noisy, and a model can recognize a problem from its statement or code despite input isolation.
+
+---
+
+## 🔒 Deployment and Data Handling
+
+Public access requires no account. PDFs are limited to **10 pages and 20 MiB**; source files are limited to **1 MiB**. A source IP may submit at most **five PDFs per sliding ten-minute window** across both submission endpoints. Writes require the custom request header and pass a same-origin check. The limit is held in one process's memory; multi-instance deployments need a shared or edge-side limiter.
+
+`AUTOJUDGER_HISTORY_DB` selects the SQLite path; its default is `data/history.sqlite3`. The database stores completed reports, not uploaded PDFs or source files. **Completed reports and live task states are public through the web UI.** In-progress jobs live in server memory and disappear after a restart. The configured model service receives uploaded statements and source code for evaluation; review its data policy before processing confidential problems.
+
+The Git repository excludes `data/`, uploads, reports, private reference manifests, PDFs, SQLite databases and journal files, private keys, and filled environment files. Run `python scripts/check_release.py` to scan the actual Git index before publishing. A forced addition or an earlier Git commit still requires manual review.
+
+### Reference Provenance
+
+Live mode uses Codeforces problem metadata, problem pages, author Tutorial links, and editorial entries. An editorial may contain full code, a partial snippet, a shared template, or a submission link. Retrieved editorial programs are not formal platform-provided `std` files. Access restrictions and layout changes can reduce usable references.
+
+`REFERENCE_MANIFEST` can point to an operator-reviewed JSON corpus **outside** the repository. Each entry needs `contestId`, `index`, `name`, `rating`, `tags`, `statement`, `source`, and `editorialUrl`. Redistribute third-party statements and code only with appropriate rights. The service refuses a difficulty estimate if reference coverage or density is insufficient.
+
+---
+
+## ✅ Validation
 
 ```bash
 .venv/bin/pytest -q
@@ -75,10 +145,14 @@ Live mode uses Codeforces `problemset.problems`, problem pages, linked author Tu
 PYTHONPATH=src .venv/bin/python scripts/verify_codeforces_sample.py
 ```
 
-Unit tests use fake agents and references to exercise scoring weights, input isolation, calibration, editorial extraction, and PDF validation without paid model calls. The live sample script needs model credentials. On 2026-10-18 it attempted 20 Codeforces references and verified 10 across CF 800–2200. The [metadata-only audit](validation/codeforces-sample.json) contains URLs, lengths, hashes, and failure reasons, not statements, code, or keys. A [historical pipeline smoke result](validation/end-to-end-smoke.json) used an earlier 10-point clarity rubric and is not a current 5-point result. Neither sample establishes population-level rating accuracy.
+Unit tests use fake agents and references to exercise scoring weights, input isolation, calibration, editorial extraction, and PDF validation without paid model calls. The live sample script requires model credentials. On 2026-10-18, it attempted 20 Codeforces references and verified 10 across CF 800–2200. The [metadata-only audit](validation/codeforces-sample.json) records URLs, lengths, hashes, and failure reasons without retaining statements, code, or keys. A [historical end-to-end smoke result](validation/end-to-end-smoke.json) used an earlier 10-point clarity rubric and is not a current 5-point result. Neither sample establishes population-level rating accuracy.
 
-## Research use and license
+---
 
-For reproducible comparisons, record the application commit, model and endpoint versions, ranking rounds, reference IDs and ratings, and retrieval date. Human review and fresh reference retrieval remain necessary. See [contribution guidelines](CONTRIBUTING.md), [security reporting](SECURITY.md), and [citation metadata](CITATION.cff).
+## 🤝 Contributing
 
-Released under the [MIT License](LICENSE). Codeforces statements, editorials, and source programs retain their original rights; full copies are not included here.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for changes and test expectations, and [SECURITY.md](SECURITY.md) for private vulnerability reporting. Please use synthetic fixtures and avoid committing credentials, user uploads, or full third-party problem content.
+
+## 📘 License
+
+XCPC-ProblemJudger is released under the [MIT License](LICENSE). Codeforces statements, editorials, and source programs retain their original rights and are not included here in full.

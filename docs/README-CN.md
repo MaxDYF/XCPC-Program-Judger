@@ -1,117 +1,158 @@
-# XCPC题目评分器 · XCPC-ProblemJudger
+<div align="center">
 
-[English](../README.md) · [中文](README-CN.md) · [MIT License](../LICENSE)
+# XCPC-ProblemJudger
 
-给 ICPC 风格题目做**题面清晰度评估与难度标定**的服务。上传完整题面 PDF 与 std 源码后，在同一条 pipeline 中：
+**XCPC题目评分器：评估 ICPC/CCPC 题面清晰度，估计 Codeforces 难度分**
 
-1. 分析 agent 理解题意、std 算法和复杂度，推断 Codeforces 标签。
-2. 去背景理解 agent 只阅读原题面，写出不依赖文娱或其他题外知识的任务含义，并标明仅凭题面仍不明确的细节；这条评分链不接收 std 或题解。
-3. 题面清晰度 agent **只接收原题面和去背景化含义，不接收 std 或题解**，以一般 ICPC/CCPC 选手合理掌握的竞赛常识为界判断题意是否清楚；超出这条线的内容，只有在题面未解释充分、确实妨碍理解任务时才扣分。任务与输入输出、语言表述、有效信息集中度、背景独立性各评 0–5 整数分，分别按 20%、35%、10%、35% 加权；加权原始分四舍五入为 0–5 的总分，3 分起为接受档位。0–5 依次对应 strong reject、reject、weak reject、weak accept、accept、strong accept。算法是否容易、做法是否清晰不计入此分。
-4. 检索 Codeforces 题库，按标签匹配并从 CF 800 起、无固定难度上限的题目中分层取 5–20 道；最多 4 道候选题并行读取题面与官方题解，同一分档的候选作为备选依次尝试。收集时会比较上传题与参考题的题面和源码，遇到同一道题就排除并补选。验证后的参考题仍需满足 rating 的覆盖与密度要求，否则拒绝评分。实际覆盖范围受匹配题目和完整题解的供给限制。
-5. 从题页的官方 Tutorial 链接进入 Codeforces 出题人题解，按题号提取该题的**完整程序**。常见代码块由规则解析；非标准排版交给提取 agent 定位，且必须逐字匹配原文或链接。缺少足量材料时返回错误，不生成虚构参考题。
-6. 独立排序 agent 只接收匿名题面和源码，不能调用网页工具，输入不包含标签、rating、题号、URL、清晰度评分或检索分析。默认将用户题与参考题一同盲排 3 轮。
-7. 统计盲排中“用户题比某参考题更难”的频率，在参考题的 rating 梯度上寻找使成对判断冲突最少的插入点；用单调回归整理互相矛盾的判断。**难度分是估计 Codeforces rating**：取插入位置两侧参考题 rating 的中点，按 100 分档取整。梯度两端以最近间距估算并明确标注。0–100 的梯度位置只作为辅助指标。报告展示模型原始顺位、顺序逆转率、同样最优的顺位区间和题解链接；这不是平台官方定级，也不校验 std 的正确性。题面清晰度和难度分不合并。
+[![Python 3.11+](https://img.shields.io/badge/Python-3.11%2B-3776AB?logo=python&logoColor=white)](../pyproject.toml)
+[![CI](https://github.com/MaxDYF/XCPC-Program-Judger/actions/workflows/ci.yml/badge.svg)](https://github.com/MaxDYF/XCPC-Program-Judger/actions/workflows/ci.yml)
+[![MIT License](https://img.shields.io/badge/License-MIT-2da891)](../LICENSE)
 
-报告中的题意概述、算法与复杂度分析、去背景化题意、清晰度评语和盲排理由均使用中文。引用题面原句时可保留原语言，Codeforces 官方标签、题名、代码标识符、算法缩写和公式保留原样。若模型返回英文说明，服务会再调用模型翻译相应说明字段。
+[English](../README.md) · [快速开始](#-快速开始) · [工作原理](#-工作原理) · [验证](#-验证)
 
-## 安装
+</div>
 
-需要 Python 3.11+：
+---
 
-```bash
-python -m venv .venv
-.venv/bin/pip install -e '.[test]'
-export OPENAI_API_KEY='your-key'
-export OPENAI_MODEL='gpt-6-luna'
+## 📢 项目状态
+
+项目已提供网页、命令行、异步任务进度和持久化评测历史。每份完整报告包含两项独立结果：**0–5 整数档位的题面清晰度**，以及**估计 Codeforces rating**。难度分由参考题标定，不是 Codeforces 官方定级，也不能证明上传的 std 正确。
+
+## 🌟 功能亮点
+
+- **两项独立评估。** 清晰度评判选手能否理解任务，难度估计 Codeforces rating；两者不合并。
+- **参考题标定。** 按相近标签和难度梯度抽取 5–20 道 Codeforces 题；若抽到上传题本身，会排除并补选。
+- **出题人题解来源。** 读取参考题题面及题页链接的官方 Tutorial，提取并核验完整程序；非标准排版由专门的提取 agent 辅助，材料不足时跳过。
+- **多轮匿名排序。** 排序 agent 只看匿名题面与程序，不接收标签、rating、题号、URL 或检索记录；报告展示它与参考题难度梯度的分歧。
+- **持续的网页任务。** 刷新提交页面可恢复进度，历史页显示进行中的任务和已完成报告。分析文字使用中文，引用原文可保留原语言。
+
+---
+
+## 🎬 项目概览
+
+上传完整题面 PDF 和对应 std 源码后，系统分析题意与做法，单独评估题面是否清楚，再收集 Codeforces 参考题，对匿名题面与程序排序，最后依据参考题 rating 校准难度。
+
+```mermaid
+flowchart LR
+    A["题面 PDF + std 源码"] --> B["题目与算法分析"]
+    A --> C["只读题面的清晰度评估"]
+    B --> D["收集 Codeforces 参考题"]
+    D --> E["匿名难度排序"]
+    A --> E
+    E --> F["rating 标定"]
+    C --> G["评测报告"]
+    F --> G
 ```
 
-`OPENAI_BASE_URL` 可指向兼容 Chat Completions 的服务。模型需支持 JSON mode 和足够大的上下文；20 道完整题面与源码可能超出模型上下文。服务不会静默截断上传的题面或 std。
-对局域网 IP 的 `OPENAI_BASE_URL`，客户端会直接连接，以免系统代理拦截内网请求。不要把 API key 写进项目文件或验证报告。
+清晰度链路不会收到上传的 std 或题解。盲排链路不会收到参考题标签、rating、题号、URL 或清晰度结果。
 
-默认分工：盲排 `JUDGE_MODEL` 与题面清晰度评分 `CLARITY_MODEL` 使用 `gpt-6-sol`；题目分析、去背景解释、题解格式提取与中文润色使用 `gpt-6-luna`。可用 `ANALYST_MODEL`、`INTERPRETER_MODEL`、`EXTRACTOR_MODEL`、`FORMAT_MODEL` 等环境变量单独覆盖。提取 agent 仅在规则解析失败时调用；它只能指出题解中逐字存在的代码或链接，服务端会再次检查代码完整性和链接目标。排序 agent 采用独立、无历史的模型请求，不提供网页工具，也不传检索元数据。题面或源码本身可能暗示原题身份，模型已有知识也无法完全消除，因此“盲排”是输入隔离而非绝对无先验。
+---
 
-`BLIND_RANK_ROUNDS` 控制盲排轮数（1–5，默认 3）。更多轮数有助于发现排序不稳定，但会线性增加模型调用成本。算法对参考题 rating 采用“总体难度参照”而不是要求每一对不同 rating 的题在真实难度上严格有序；报告会披露模型与 rating 梯度的分歧。
+## 🚀 快速开始
 
-## 命令行
+### 安装环境
+
+需要 Python 3.11 或更新版本。模型接口需兼容 Chat Completions JSON 响应，并有足够上下文容纳完整参考材料。
+
+```bash
+git clone https://github.com/MaxDYF/XCPC-Program-Judger.git
+cd XCPC-Program-Judger
+python -m venv .venv
+.venv/bin/pip install -e '.[test]'
+export OPENAI_API_KEY='replace-with-your-own-key'
+export OPENAI_BASE_URL='https://your-compatible-endpoint.example/v1'
+```
+
+`OPENAI_API_KEY` 从进程环境变量读取，在内存中用于请求所配置的模型服务。不要把填好密钥的环境文件提交到仓库。题目分析、去背景解释、题解提取和中文润色默认使用 `gpt-6-luna`；盲排 `JUDGE_MODEL` 与清晰度评分 `CLARITY_MODEL` 默认使用 `gpt-6-sol`。可通过 `OPENAI_MODEL`、`ANALYST_MODEL`、`INTERPRETER_MODEL`、`EXTRACTOR_MODEL` 和 `FORMAT_MODEL` 分别覆盖角色模型。
+
+### 网页
+
+```bash
+deploy/run-sandbox.sh
+# 打开 http://127.0.0.1:8765/
+```
+
+Bubblewrap 启动脚本将运行时和源码只读挂载，为程序提供独立的临时目录，只开放 `data/` 供 SQLite 历史库写入；它仍与宿主机共享网络。通过 Cloudflare Tunnel 发布时，应保持服务监听 `127.0.0.1`，并把 `AUTOJUDGER_PUBLIC_HOST` 设为自己的准确公网域名。默认 Host 白名单只接受本机地址。容器方案见 [Dockerfile](../Dockerfile)。
+
+### 命令行
 
 ```bash
 .venv/bin/xcpc-problemjudger problem.pdf std.cpp --references 12 --output report.json
 ```
 
-## HTTP API
-
-网页公开访问，不要求账号或口令。上传 PDF 不得超过 10 页、20 MB，std 不得超过 1 MB。同一来源 IP 在滑动的 10 分钟窗口中最多提交 5 次 PDF；`/jobs` 与 `/evaluate` 共用配额，超额返回 HTTP 429 和 `Retry-After`。无效提交也计入配额，以免反复解析恶意文件。
+### HTTP API
 
 ```bash
-deploy/run-sandbox.sh
 curl -H 'X-XCPC-ProblemJudger-Request: 1' \
-  -X POST http://127.0.0.1:8765/evaluate \
-  -F statement_pdf=@problem.pdf -F std_file=@std.cpp -F reference_count=12
+  -F statement_pdf=@problem.pdf \
+  -F std_file=@std.cpp \
+  -F reference_count=12 \
+  http://127.0.0.1:8765/evaluate
 ```
 
-打开 `http://127.0.0.1:8765/` 可使用中文上传页面，查看进度与报告。任务 ID 保存在当前浏览器标签的 sessionStorage，刷新后会恢复进度；关闭标签也不会取消服务器上的评测。`/history` 同时展示排队和评测中的任务，以及**启用历史库后**完成的评测。进行中任务的详情页显示阶段进度；完成记录可看完整评分详情，列表可分页加载，报告保存在 SQLite 中，重启后仍可查看。历史库只保存评分报告与摘要，不保存上传的 PDF、std 文件或参考题源码。进行中任务仅存在服务进程的内存中，服务重启会中断并清除。前端使用 `POST /jobs` 创建异步任务，轮询 `GET /jobs/{job_id}`；`POST /evaluate` 保留同步 JSON 接口。公开只读接口为 `GET /api/jobs`、`GET /api/history` 与 `GET /api/history/{id}`。所有写操作须附 `X-XCPC-ProblemJudger-Request: 1`，并通过同源检查。`/docs` 与 `/openapi.json` 在公网版本关闭。临时任务状态仅在内存中保留至完成后一小时；最多同时运行或排队 4 个任务、最多保存 100 条临时任务状态。
+网页通过 `POST /jobs` 创建任务，并轮询 `GET /jobs/{job_id}`；`GET /api/jobs` 展示排队和进行中的任务。`POST /evaluate` 提供同步 JSON 接口。`GET /api/history` 与 `GET /api/history/{id}` 返回已完成报告。浏览器在当前标签的 sessionStorage 中保存任务 ID，刷新后可以恢复进度；关闭标签不会取消服务器任务，但服务进程重启会中断进行中的任务。
 
-## Cloudflare Tunnel 公网发布与隔离
+---
 
-1. Tunnel 公网主机名指向 `http://127.0.0.1:8765`；无需配置 Cloudflare Access 登录。可另外在 Cloudflare 边缘启用 WAF/限流来减轻分布式请求压力。
-2. 例如在自己的部署中设置 `AUTOJUDGER_PUBLIC_HOST=judge.example.org`。未配置时应用只接受 `localhost`、`127.0.0.1`、`::1` 的 Host。公网 Host 必须逐字列入允许名单；不要用通配符。保持应用只监听 `127.0.0.1`，不要开放机器的 8765 入站端口。
-3. 推荐用容器运行，确保进程不能读取宿主机文件。`Dockerfile` 只复制程序文件；下列命令将容器根文件系统设为只读，只把独立的历史目录挂载为可写，给 `/tmp` 临时空间，移除 Linux capabilities，并只把服务端口发布到宿主机回环地址。先建立宿主机历史目录并赋予容器用户 UID 65532 写权限。环境文件保存在仓库外，权限设为 `0600`，至少包含 `OPENAI_API_KEY`、`OPENAI_BASE_URL`、`OPENAI_MODEL`、`AUTOJUDGER_PUBLIC_HOST`。如需离线语料，只单独挂载已审核的 JSON 文件为只读，不要挂载用户家目录或 Docker socket。
+## 🧠 工作原理
 
-```bash
-docker build -t xcpc-problemjudger:secure .
-docker run -d --name xcpc-problemjudger --restart unless-stopped --init \
-  --read-only --tmpfs /tmp:rw,nosuid,noexec,size=128m,mode=1777 \
-  --cap-drop ALL --security-opt no-new-privileges \
-  --pids-limit 128 --memory 1g --cpus 2 \
-  --env-file /path/outside/repository/xcpc-problemjudger.env \
-  -e AUTOJUDGER_HISTORY_DB=/app/data/history.sqlite3 \
-  --mount type=bind,src=/path/to/private/history,dst=/app/data \
-  -p 127.0.0.1:8765:8000 xcpc-problemjudger:secure
-```
+### 题面清晰度
 
-当前机器也提供 `deploy/run-sandbox.sh`，用 Bubblewrap 只读挂载 Python 运行时、虚拟环境和 `src`，只给项目的 `data/` 历史目录写权限，隐藏工作区其他目录与用户家目录，并将 `/tmp` 放进独立临时文件系统。它仍共享宿主机网络；需要更强的网络隔离时使用容器并另设出站防火墙，只允许模型端点、Codeforces 和经审核的源码站点。任何公网服务都无法保证绝无漏洞；上线前还需更新依赖与宿主机补丁。
+去背景理解 agent 只阅读原题面，写出不依赖题外背景知识的任务含义。独立评分 agent 再将四项指标分别评为 0–5 的整数：
 
-服务在读取上传文件前先验证 Host、来源与 IP 配额，并将整个 HTTP 请求限制为 22 MiB；对超额和并发请求拒绝处理。Cloudflare Tunnel 的请求仅在**本机连接且 Host 匹配公网主机名**时信任 `CF-Connecting-IP`，其他情况使用直接连接 IP；忽略客户端提供的 `X-Forwarded-For`，并关闭 Uvicorn 对代理头的自动信任。限流计数保存在单进程内存，服务重启会清空；若部署多个实例，须改用共享计数存储或 Cloudflare 边缘限流。页面不用外部字体、脚本或图片；题解源码跳转不会自动跟随，防止从允许的网站跳转到内网地址。详细内部异常只写服务日志，不返回给访问者。上传的题面和 std 仍会按业务需要发往配置的模型服务；请确认该模型服务的数据处理方式符合你的要求。
+| 指标 | 权重 |
+| --- | ---: |
+| 任务及输入输出 | 20% |
+| 语言表述 | 35% |
+| 有效信息集中度 | 10% |
+| 背景独立性 | 35% |
 
-## 参考题获取与离线语料
+加权结果四舍五入为整数档位。0–5 分依次对应 **strong reject**、**reject**、**weak reject**、**weak accept**、**accept**、**strong accept**；3 分是接受档位的起点。评判对象是一般 ICPC/CCPC 选手能否理解题目**要做什么**，不评价算法是否容易想到。对于选手合理掌握的竞赛常识无需扣分；超出常识的概念如果在题面中解释充分，也无需单独扣分。
 
-实时模式使用 Codeforces 的 `problemset.problems` 获取标签和 rating，从题页的官方 Tutorial 链接定位博客，再用 `blogEntry.view` 读取出题人题解，并按题号截取解法。它是官方题解展示的实现，不等于每题都有可下载的官方 std 文件。提取 agent 可处理非标准 HTML、内嵌代码和题解中的源码链接；链接仅允许当前比赛的 Codeforces 提交页或明确指向源码文件的 GitHub 链接。访问不到或只有片段时跳过该题。
+### 难度标定
 
-实际抽查发现多种格式：`1234A` 使用完整嵌入代码块；`1990A` 使用标题分节；`1730A` 只给出判题提交链接；`2032A` 给出题目代码片段和另一个通用模板。前三种情形分别尝试直接提取、按题号定位、读取链接源码；`2032A` 的模板与题目片段可组合为完整程序，已通过 C++ 语法检查。无法获取可核验完整源码的题目会跳过（当前环境中 `1730A` 的提交页无法读取）。Codeforces 访问限制或页面改版仍可能影响其他题；服务不会绕过站点访问限制。
+1. 阅读上传题面和 std，推断算法、复杂度和 Codeforces 标签。
+2. 从可用题目中选取 5–20 道相近标签的参考题，形成 rating 梯度；最多并行读取 4 道候选题的题面和出题人题解。
+3. 核验参考题的完整程序。格式异常时由提取 agent 找出原文中确实存在的代码或允许的源码链接；只有片段或材料不足的题目会跳过。
+4. 独立 agent 默认进行 3 轮匿名排序，不使用网页工具，不接收检索元数据。
+5. 将成对排序结果按最少冲突插入和单调回归拟合到参考题 rating 梯度，再用相邻参考题 rating 估计上传题的难度，按 100 分档取整。
 
-可以由服务管理员设置 `REFERENCE_MANIFEST=/absolute/path/references.json` 使用已审核的离线参考语料。格式为 JSON 数组，每项如下：
+报告披露原始顺位、参考题顺序逆转率、同样最优的插入位置，以及梯度边缘的外推情况。0–100 的梯度位置仅为辅助指标；**难度分为估计 Codeforces rating**。Codeforces rating 不是逐题真实难度的严格全序，模型也可能从题面或程序认出原题，因此盲排只是输入隔离。
 
-```json
-{
-  "contestId": 4,
-  "index": "A",
-  "name": "Watermelon",
-  "rating": 800,
-  "tags": ["brute force", "math"],
-  "statement": "The complete problem statement ...",
-  "source": "// Complete code from official editorial ...",
-  "editorialUrl": "https://codeforces.com/blog/entry/12345"
-}
-```
+---
 
-语料应只收录真实 Codeforces 题目、完整题面及核验过的题解代码；题面和源码的再分发须遵守原站点条款。生产使用宜由后台定期构建并人工抽检语料。参考题至少 70% 处于不同 rating、整体跨度至少 800；相邻 rating 间距通常不超过 600，覆盖范围较宽且参考题较少时按平均间距放宽，否则拒绝难度评分。
+## 🔒 部署与数据处理
 
-## 测试
+网页公开访问，不需要账号。PDF 最多 **10 页、20 MiB**，std 文件最多 **1 MiB**。同一来源 IP 在滑动的 10 分钟窗口内，最多提交 **5 次 PDF**，两个提交接口共用配额。写操作须附自定义请求头，并通过同源检查。限流计数存在单进程内存中；多实例部署需要共享计数或边缘限流。
+
+`AUTOJUDGER_HISTORY_DB` 可指定 SQLite 文件路径，默认是 `data/history.sqlite3`。历史库保存完成的评分报告，不保存上传的 PDF 或 std。**完成报告和进行中任务状态在网页上公开可读。** 运行中任务只保存在服务进程内存里，重启会清除。上传题面和程序会按业务需要发送到配置的模型服务；处理未公开题目之前，请确认该服务的数据处理方式。
+
+Git 仓库排除 `data/`、上传文件、报告、私有参考语料、PDF、SQLite 数据库及其临时文件、私钥和填好内容的环境文件。发布前运行 `python scripts/check_release.py` 检查实际 Git 暂存区；曾经的提交记录和强制添加文件仍需人工核对。
+
+### 参考材料来源
+
+实时模式读取 Codeforces 题目元数据、题页、出题人 Tutorial 链接及题解条目。题解可能包含完整代码、片段、共用模板或提交链接。抽取出的程序并非平台统一提供的正式 std。访问限制和页面格式变化会降低可用参考题数量。
+
+`REFERENCE_MANIFEST` 可指向**仓库外**经管理员审核的 JSON 语料。每项需要 `contestId`、`index`、`name`、`rating`、`tags`、`statement`、`source` 和 `editorialUrl`。转载第三方题面和代码需遵守相应权利要求。参考题 rating 覆盖或密度不足时，服务会拒绝给出难度估计。
+
+---
+
+## ✅ 验证
 
 ```bash
 .venv/bin/pytest -q
-```
-
-测试用假的 agent 和参考语料验证题面评分权重、std 输入隔离、盲排边界、CF rating 换算、非标准题解的逐字校验、片段拒绝、失败时不评分以及 PDF 输入检查，不调用付费模型或 Codeforces。
-
-## 实时抽样验证
-
-设置 `OPENAI_API_KEY`、`OPENAI_BASE_URL` 和可选的 `EXTRACTOR_MODEL` 后运行：
-
-```bash
+.venv/bin/python scripts/check_release.py
 PYTHONPATH=src .venv/bin/python scripts/verify_codeforces_sample.py
 ```
 
-脚本从 Codeforces 实际读取 10 道覆盖 CF 800–2200 的题，逐题要求可提取的题面、官方题解和完整程序。C++ 代码用 `g++ -fsyntax-only`，Python 代码用 AST 做语法检查；不会执行题解程序。审计结果保存在 `validation/codeforces-sample.json`，只含来源链接、长度、哈希、验证结果和失败原因，不保存题面、源码或 API key。2026-10-18 的实测为 20 次尝试、10 道通过；官方题解只有片段、动态占位内容、提交页被拒绝或题面图片缺少文本描述的题会跳过。
+单元测试使用假的 agent 和参考题，验证清晰度权重、输入隔离、rating 标定、题解代码提取和 PDF 检查，不产生付费模型请求。实时抽样脚本需要模型凭据。2026-10-18 的一次抽样尝试了 20 道 Codeforces 题，核验通过 10 道，覆盖 CF 800–2200。[只含元数据的审计记录](../validation/codeforces-sample.json) 保存来源链接、长度、哈希和失败原因，不保存题面、源码或密钥。[历史链路冒烟结果](../validation/end-to-end-smoke.json) 使用旧版 10 分制清晰度标准，不能当成当前 5 分制结果。这些样本也不足以证明整体 rating 估计精度。
 
-同日还用 `2032A` 的题面与官方题解代码做了 1 轮完整 pipeline 冒烟测试：当时旧版 10 分制的清晰度评为 8.9/10，实时获取的 10 道参考题覆盖 CF 800–2600，难度估计 CF 800，与该题官方 rating 一致。简要结果见 `validation/end-to-end-smoke.json`。这是历史链路验证，不代表新版 5 分制的评分结果或统计精度。
+---
+
+## 🤝 参与贡献
+
+修改和测试要求见 [CONTRIBUTING.md](../CONTRIBUTING.md)，私下报告安全问题见 [SECURITY.md](../SECURITY.md)。测试请使用合成材料，不提交凭据、用户上传内容或未经许可转载的第三方题面与源码。
+
+## 📘 许可证
+
+XCPC-ProblemJudger 采用 [MIT License](../LICENSE)。Codeforces 题面、题解和源码仍归原权利人所有，仓库不收录其全文。
