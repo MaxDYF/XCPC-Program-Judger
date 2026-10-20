@@ -41,6 +41,7 @@
 .history-card h2 { margin:8px 0 16px; font-size:18px; }
 .history-card h3 { margin:0 0 9px; font-size:14px; line-height:1.5; }
 .history-card p,.history-card li { color:#667e8f; font-size:11px; line-height:1.8; }
+.history-downloads { display:flex; flex-wrap:wrap; gap:10px; }.history-download { display:inline-flex; align-items:center; padding:10px 14px; border-radius:9px; background:#eaf8f4; border:1px solid #ccebe1; color:#117c6f; font-size:11px; font-weight:800; }.history-download:hover { border-color:#20ad96; background:#ddf5ee; }.history-upload-note { margin:10px 0 0; }
 .history-subtitle { margin:18px 0 5px; color:#324f5f; font-size:11px; font-weight:800; }
 .history-wide { margin-top:15px; }
 .history-prewrap { white-space:pre-wrap; }

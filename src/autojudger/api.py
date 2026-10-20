@@ -9,7 +9,7 @@ from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 from fastapi import FastAPI, File, Form, HTTPException, Query, UploadFile
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 
 from .agents import AnalystAgent, BlindJudgeAgent, ClarityJudgeAgent, EditorialExtractionAgent, InterpretationAgent
@@ -80,7 +80,7 @@ def _run_job(job_id: str, pdf: bytes, std: bytes, reference_count: int) -> None:
         result["history_id"] = job_id
         with _jobs_lock:
             created_at = _jobs[job_id]["created_at"]
-        HistoryStore().save(job_id, result, created_at)
+        HistoryStore().save(job_id, result, created_at, pdf=pdf, std=std)
         with _jobs_lock:
             _jobs[job_id].update(status="completed", phase="completed", result=result, finished_at=time.time())
     except (JudgingError, OSError, ValueError):
@@ -122,6 +122,26 @@ def get_history(history_id: str) -> dict:
     return entry
 
 
+@app.get("/api/history/{history_id}/files/{kind}")
+def download_upload(history_id: str, kind: str) -> StreamingResponse:
+    try:
+        source, size = HistoryStore().open_upload(history_id, kind)
+    except (OSError, ValueError):
+        raise HTTPException(404, "Uploaded file not found") from None
+
+    def chunks():
+        try:
+            while chunk := source.read(64 * 1024):
+                yield chunk
+        finally:
+            source.close()
+
+    filename = "statement.pdf" if kind == "pdf" else "standard-solution.txt"
+    return StreamingResponse(chunks(), media_type="application/octet-stream",
+                             headers={"Content-Disposition": f'attachment; filename="{filename}"',
+                                      "Content-Length": str(size)})
+
+
 @app.get("/health")
 def health() -> dict[str, str]:
     return {"status": "ok"}
@@ -135,10 +155,11 @@ def evaluate(statement_pdf: UploadFile = File(...), std_file: UploadFile = File(
     if not _job_slots.acquire(blocking=False):
         raise HTTPException(429, "Evaluation capacity is full")
     try:
-        result = _service(reference_count).evaluate(*_read_uploads(statement_pdf, std_file))
+        pdf, std = _read_uploads(statement_pdf, std_file)
+        result = _service(reference_count).evaluate(pdf, std)
         history_id = secrets.token_urlsafe(24)
         result["history_id"] = history_id
-        HistoryStore().save(history_id, result)
+        HistoryStore().save(history_id, result, pdf=pdf, std=std)
         return result
     except JudgingError as exc:
         _logger.exception("Synchronous evaluation failed")

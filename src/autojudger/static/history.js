@@ -222,6 +222,17 @@ function renderDetail(entry) {
   $('detail-title').textContent = analysis.summary || '未命名题目';
   $('detail-date').textContent = `${displayDate(entry.created_at)} · 历史记录`;
   $('detail-rating').textContent = report.score ?? '—';
+  const uploads = entry.uploads || {};
+  for (const [kind, elementId] of [['pdf', 'detail-pdf-download'], ['std', 'detail-std-download']]) {
+    const link = $(elementId);
+    const available = Boolean(report.history_id && uploads[kind]);
+    link.classList.toggle('hidden', !available);
+    if (available) link.href = `/api/history/${encodeURIComponent(report.history_id)}/files/${kind}`;
+    else link.removeAttribute('href');
+  }
+  $('detail-upload-note').textContent = uploads.pdf || uploads.std
+    ? '这些原始文件对所有访问此详情页的人开放下载。'
+    : '这条记录创建时未保存原始文件，无法提供下载。';
   const clarityMax = Number(clarity.max_score) > 0 ? Number(clarity.max_score) : 5;
   const totalScore = clarity.weighted_score ?? clarity.score;
   const clarityScore = Number(totalScore);

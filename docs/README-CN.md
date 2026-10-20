@@ -43,7 +43,7 @@ deploy/run-sandbox.sh
 
 ## 🔒 数据与部署
 
-API Key 从进程环境变量读取。上传的 PDF 和源码不保存在历史库中；**已完成报告和进行中任务状态在网页上公开可见**。默认 SQLite 数据库位于 `data/history.sqlite3`，数据库、环境文件和上传材料均被 Git 排除。
+API Key 从进程环境变量读取。新完成评测的报告、题面 PDF 和 std **都可在详情页公开访问和下载**；原文件单独保存在 `data/submissions/`，早期记录没有原文件。数据库、上传材料和环境文件均被 Git 排除。
 
 公开提交限制为 PDF 最多 10 页、20 MiB，源码最多 1 MiB；同一 IP 每 10 分钟最多提交 5 次 PDF。启动脚本将服务限制在 `127.0.0.1`，并使用 Bubblewrap 隔离文件系统。容器构建见 [Dockerfile](../Dockerfile)。评测时上传材料会发送给配置的模型服务。
 

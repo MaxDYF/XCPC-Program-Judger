@@ -43,7 +43,7 @@ The model endpoint must support Chat Completions JSON responses. Set `AUTOJUDGER
 
 ## 🔒 Data and Deployment
 
-The API key is read from the process environment. Uploaded PDFs and source files are not stored in the history database; **completed reports and live task states are public** through the web app. The default SQLite database is `data/history.sqlite3`, which is excluded from Git along with environment files and uploads.
+The API key is read from the process environment. Completed reports and their uploaded PDFs and source files are **publicly accessible** from the detail page. Uploads are stored separately from the history database under `data/submissions/`; earlier reports have no saved files. The database, uploads, and environment files are excluded from Git.
 
 Public submissions are limited to PDFs of 10 pages and 20 MiB, source files of 1 MiB, and five PDF submissions per IP per ten minutes. The included launcher keeps the service on `127.0.0.1` inside a Bubblewrap filesystem sandbox. A container build is available in [Dockerfile](Dockerfile). Uploaded material is sent to the configured model service for evaluation.
 

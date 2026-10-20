@@ -95,10 +95,13 @@ def test_running_job_is_visible_in_public_history_without_uploads(monkeypatch):
             break
         time.sleep(0.01)
     assert all(item["id"] != job_id for item in client.get("/api/jobs").json()["items"])
-    assert client.get(f"/api/history/{job_id}").json()["report"]["score"] == 1200
+    entry = client.get(f"/api/history/{job_id}").json()
+    assert entry["report"]["score"] == 1200
+    assert entry["uploads"] == {"pdf": True, "std": True}
+    assert client.get(f"/api/history/{job_id}/files/std").content == b"PRIVATE_SOURCE"
 
 
-def test_history_page_persists_report_without_uploaded_files(monkeypatch, tmp_path):
+def test_history_page_downloads_original_uploads_without_putting_them_in_database(monkeypatch, tmp_path):
     monkeypatch.setattr(security, "_submission_limiter", security.SubmissionLimiter())
 
     class FakeService:
@@ -113,8 +116,9 @@ def test_history_page_persists_report_without_uploaded_files(monkeypatch, tmp_pa
 
     monkeypatch.setattr(api, "_service", lambda count: FakeService())
     client = TestClient(api.app, base_url="http://localhost")
+    pdf = _pdf()
     response = client.post("/evaluate", headers={"X-XCPC-ProblemJudger-Request": "1"}, files={
-        "statement_pdf": ("problem.pdf", _pdf(), "application/pdf"),
+        "statement_pdf": ("problem.pdf", pdf, "application/pdf"),
         "std_file": ("std.cpp", b"SECRET_STD_MARKER", "text/plain")})
     assert response.status_code == 200
     history_id = response.json()["history_id"]
@@ -127,8 +131,31 @@ def test_history_page_persists_report_without_uploaded_files(monkeypatch, tmp_pa
     assert listing["items"][0]["clarity_score"] == 3.6
     detail = client.get(f"/api/history/{history_id}").json()
     assert detail["report"]["score"] == 1600
+    assert detail["uploads"] == {"pdf": True, "std": True}
+    pdf_download = client.get(f"/api/history/{history_id}/files/pdf")
+    std_download = client.get(f"/api/history/{history_id}/files/std")
+    assert pdf_download.content == pdf
+    assert std_download.content == b"SECRET_STD_MARKER"
+    assert pdf_download.headers["content-disposition"] == 'attachment; filename="statement.pdf"'
+    assert std_download.headers["content-disposition"] == 'attachment; filename="standard-solution.txt"'
+    assert client.get(f"/api/history/{history_id}/files/other").status_code == 404
+    assert client.get("/api/history/unknown/files/pdf").status_code == 404
     assert client.get("/api/history/unknown").status_code == 404
     assert b"SECRET_STD_MARKER" not in (tmp_path / "history.sqlite3").read_bytes()
+    stored = tmp_path / "submissions" / history_id / "standard-solution.txt"
+    assert stored.stat().st_mode & 0o777 == 0o600
+    stored.unlink()
+    stored.symlink_to(tmp_path / "history.sqlite3")
+    assert client.get(f"/api/history/{history_id}/files/std").status_code == 404
+
+
+def test_older_history_record_without_saved_uploads_has_no_download_links():
+    history_id = "a" * 32
+    api.HistoryStore().save(history_id, {"score": 1200, "analysis": {"summary": "早期记录"}})
+    client = TestClient(api.app, base_url="http://localhost")
+    entry = client.get(f"/api/history/{history_id}").json()
+    assert entry["uploads"] == {"pdf": False, "std": False}
+    assert client.get(f"/api/history/{history_id}/files/pdf").status_code == 404
 
 
 def test_public_page_and_host_isolation(monkeypatch):
